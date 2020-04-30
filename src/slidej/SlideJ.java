@@ -26,33 +26,42 @@ public class SlideJ {
     }
 
     public <T extends RealType<T> & NativeType<T>> void load(File file, int series) {
-        ImageLoader il = new ImageLoader<T>();
+        ImageLoader<T> il = new ImageLoader<>();
 
         Img<T> img = il.load(file, series);
 
         ImageMetadata meta = il.getMeta();
         List<CalibratedAxis> axes = meta.getAxes();
 
-        int neighbourhoodSize = 8;
+        int neighbourhoodSize = 50;
 
-        long[] calNeighbourhood = new long[img.numDimensions()];
+        int[] calNeighbourhood = new int[img.numDimensions()];
+
+        double[] calibrations = new double[img.numDimensions()];
 
         int caxis = -1;
+
+        String[] dimLabels = new String[img.numDimensions()];
 
         for (int i = 0; i < calNeighbourhood.length; i++) {
             CalibratedAxis axis = axes.get(i);
             AxisType type = axis.type();
             if (axis instanceof DefaultLinearAxis) {
-                calNeighbourhood[i] = (long) Math.round(axis.rawValue(neighbourhoodSize));
+                calNeighbourhood[i] = (int) Math.round(axis.rawValue(neighbourhoodSize));
+                calibrations[i] = ((DefaultLinearAxis) axis).scale();
             }
-            if (type instanceof DefaultAxisType && type.getLabel().equalsIgnoreCase("Channel")) {
+            if (type instanceof DefaultAxisType) {
+                dimLabels[i] = type.getLabel();
+            }
+            if (dimLabels[i].equalsIgnoreCase("Channel")) {
                 caxis = i;
             }
         }
 
         calNeighbourhood[caxis] = 1;
+        calibrations[caxis] = 2;
 
-        Analyser<T> a = new Analyser<>(calNeighbourhood);
+        Analyser<T> a = new Analyser<>(calNeighbourhood, dimLabels, calibrations);
 
 
         // IntervalView<T> channel = Views.hyperSlice(img, 2, 0);
