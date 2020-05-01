@@ -63,24 +63,6 @@ public class SlideJ {
 
         Analyser<T> a = new Analyser<>(calNeighbourhood, dimLabels, calibrations);
 
-
-        // IntervalView<T> channel = Views.hyperSlice(img, 2, 0);
-
-        //long[] minDims = new long[channel.numDimensions()];
-        //long[] maxDims = new long[channel.numDimensions()];
-
-        //  channel.min(minDims);
-        //  channel.max(maxDims);
-
-        // for (int i = 0; i < channel.numDimensions(); i++) {
-        //     minDims[i] += neighbourhoodSize;
-        //      maxDims[i] -= neighbourhoodSize;
-        //  }
-
-        // FinalInterval internalView = new FinalInterval(minDims, maxDims);
-
-        //  a.analyse(Views.interval(channel, internalView));
-
         a.analyse(img);
 
         try {
@@ -88,10 +70,11 @@ public class SlideJ {
         } catch (IOException e) {
             GenUtils.logError(e, "Could not save results file.");
         }
-//		showImage(img);
     }
 
     public <T extends NumericType<T> & NativeType<T>> void showImage(RandomAccessibleInterval<T> img) {
         ImageJFunctions.show(img);
     }
+
+
 }
