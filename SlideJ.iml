@@ -23,17 +23,6 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="jar://$USER_HOME$/fiji-nojre/Fiji.app/plugins/IA_Class_Library_v2.082.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES>
-          <root url="jar://$USER_HOME$/fiji-nojre/Fiji.app/plugins/IA_Class_Library_v2.082.jar!/" />
-        </SOURCES>
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
           <root url="file://$USER_HOME$/fiji-nojre/Fiji.app/jars/bio-formats" />
         </CLASSES>
         <JAVADOC />
@@ -41,5 +30,6 @@
         <jarDirectory url="file://$USER_HOME$/fiji-nojre/Fiji.app/jars/bio-formats" recursive="false" />
       </library>
     </orderEntry>
+    <orderEntry type="module" module-name="IAClassLibrary" />
   </component>
 </module>

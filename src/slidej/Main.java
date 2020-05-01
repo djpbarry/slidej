@@ -6,7 +6,7 @@ public class Main {
 
     public static void main(String[] args) {
 
-        File file = new File("D:/slidejTest.lif_Region 2.ome.tif");
+        File file;
 
         for (int i = 0; i < args.length - 1; i++) {
             switch (args[i]) {

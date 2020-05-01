@@ -12,9 +12,9 @@ import java.util.List;
 
 public class Analyser<T extends RealType<T> & NativeType<T>> {
     private final int[] neighbourhoodSize;
-    private ResultsTable rt;
     private final String[] dimLabels;
     private final double[] calibrations;
+    private ResultsTable[] rt;
 
     public Analyser(int[] neighbourhoodSize, String[] dimLabels, double[] calibrations) {
         this.neighbourhoodSize = neighbourhoodSize;
@@ -30,18 +30,19 @@ public class Analyser<T extends RealType<T> & NativeType<T>> {
 
         List<Pair<Interval, long[]>> cells = Grids.collectAllContainedIntervalsWithGridPositions(dims, neighbourhoodSize);
 
-        rt = new ResultsTable(cells.size());
-
         int nbCPUs = Runtime.getRuntime().availableProcessors();
+
+        rt = new ResultsTable[nbCPUs];
 
         AnalyserThread<T>[] ats = new AnalyserThread[nbCPUs];
 
-        int nCellsPerThread = (int) Math.ceil((float)cells.size() / nbCPUs);
+        int nCellsPerThread = (int) Math.ceil((float) cells.size() / nbCPUs);
         for (int thread = 0; thread < nbCPUs; thread++) {
+            rt[thread] = new ResultsTable();
             int startIndex = thread * nCellsPerThread;
             int endIndex = Math.min(startIndex + nCellsPerThread, cells.size());
-            ats[thread] = new AnalyserThread<>(cells.subList(startIndex, endIndex), img, neighbourhoodSize,
-                    rt, dimLabels, calibrations, startIndex);
+            ats[thread] = new AnalyserThread<T>(cells.subList(startIndex, endIndex), img, neighbourhoodSize,
+                    rt[thread], dimLabels, calibrations);
             ats[thread].start();
         }
         try {
@@ -58,7 +59,7 @@ public class Analyser<T extends RealType<T> & NativeType<T>> {
 
     }
 
-    public ResultsTable getRt() {
+    public ResultsTable[] getRt() {
         return rt;
     }
 }

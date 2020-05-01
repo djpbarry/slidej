@@ -1,6 +1,7 @@
 package slidej;
 
 import UtilClasses.GenUtils;
+import ij.measure.ResultsTable;
 import io.scif.ImageMetadata;
 import net.imagej.axis.AxisType;
 import net.imagej.axis.CalibratedAxis;
@@ -66,7 +67,10 @@ public class SlideJ {
         a.analyse(img);
 
         try {
-            IO.DataWriter.saveResultsTable(a.getRt(), new File(file.getAbsolutePath() + "_results.csv"));
+            ResultsTable[] rt = a.getRt();
+            for (int i = 0; i < rt.length; i++) {
+                IO.DataWriter.saveResultsTable(rt[i], new File(file.getAbsolutePath() + "_results.csv"), true, i == 0);
+            }
         } catch (IOException e) {
             GenUtils.logError(e, "Could not save results file.");
         }

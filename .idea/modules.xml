@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../IAClassLibrary/IAClassLibrary.iml" filepath="$PROJECT_DIR$/../IAClassLibrary/IAClassLibrary.iml" />
       <module fileurl="file://$PROJECT_DIR$/SlideJ.iml" filepath="$PROJECT_DIR$/SlideJ.iml" />
     </modules>
   </component>
