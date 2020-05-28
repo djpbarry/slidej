@@ -22,6 +22,8 @@ import java.util.List;
 
 public class SlideJ {
 
+    public static String TITLE = "SlideJ v1.0";
+
     public SlideJ() {
 
     }
