@@ -68,6 +68,8 @@ public class SlideJ {
 
         try {
             ResultsTable[] rt = a.getRt();
+            File output = new File(file.getAbsolutePath() + "_results.csv");
+            if (output.exists()) output.delete();
             for (int i = 0; i < rt.length; i++) {
                 IO.DataWriter.saveResultsTable(rt[i], new File(file.getAbsolutePath() + "_results.csv"), true, i == 0);
             }
