@@ -3,19 +3,15 @@
  */
 package slidej.io;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
 import io.scif.ImageMetadata;
-import io.scif.Metadata;
 import io.scif.config.SCIFIOConfig;
 import io.scif.img.ImgOpener;
 import io.scif.img.SCIFIOImgPlus;
-import net.imagej.axis.CalibratedAxis;
 import net.imglib2.img.Img;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.NumericType;
+
+import java.io.File;
 
 /**
  * 
