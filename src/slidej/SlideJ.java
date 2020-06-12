@@ -43,7 +43,7 @@ public class SlideJ {
         ImageMetadata meta = il.getMeta();
         List<CalibratedAxis> axes = meta.getAxes();
 
-        int neighbourhoodSize = 5;
+        int neighbourhoodSize = 50;
 
         int[] calNeighbourhood = new int[img.numDimensions()];
 
@@ -84,10 +84,13 @@ public class SlideJ {
 
         double[] channelCals = new double[calibrations.length - 1];
         System.arraycopy(calibrations, 0, channelCals, 0, caxis);
-        System.arraycopy(calibrations, caxis+1, channelCals, caxis, channelCals.length-caxis);
+        System.arraycopy(calibrations, caxis + 1, channelCals, caxis, channelCals.length - caxis);
 
         saveImage("E:/Dropbox (The Francis Crick)/Antoniana's Data/TestOut/distanceMap.tif",
-                DistanceTransformer.calcDistanceMap(binary,channelCals,dims));
+                DistanceTransformer.calcDistanceMap(binary, channelCals, dims, false));
+
+        saveImage("E:/Dropbox (The Francis Crick)/Antoniana's Data/TestOut/invertedDistanceMap.tif",
+                DistanceTransformer.calcDistanceMap(binary, channelCals, dims, true));
 
         Analyser<T> a = new Analyser<>(calNeighbourhood, dimLabels, calibrations);
 
@@ -109,7 +112,7 @@ public class SlideJ {
         ImageJFunctions.show(img);
     }
 
-    private <T extends RealType<T> & NativeType<T>>  void saveImage(String path, Img<T> img){
+    private <T extends RealType<T> & NativeType<T>> void saveImage(String path, Img<T> img) {
         (new ImgSaver()).saveImg(path, img);
     }
 

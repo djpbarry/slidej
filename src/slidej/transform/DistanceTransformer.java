@@ -13,15 +13,19 @@ import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
 
 public class DistanceTransformer {
-    public static Img<FloatType> calcDistanceMap(Img<BitType> binary, double[] cals, long[] dims) {
+
+    public static Img<FloatType> calcDistanceMap(Img<BitType> binary, double[] cals, long[] dims, boolean inverted) {
         OpService os = (new ImageJ()).op();
-
         ImgFactory<FloatType> factory = new CellImgFactory<>(new FloatType());
-        ImgFactory<BitType> factory2 = new CellImgFactory<>(new BitType());
 
-        RandomAccessibleInterval<BitType> invertedBinary = factory2.create(dims);
-        IterableInterval<BitType> invertedBinaryInterval = Views.iterable(invertedBinary);
-        invertedBinaryInterval = os.image().invert(invertedBinaryInterval, Views.iterable(binary));
-        return ImgView.wrap(os.image().distancetransform(invertedBinary, cals), factory);
+        if (!inverted) {
+            return ImgView.wrap(os.image().distancetransform(binary, cals), factory);
+        } else {
+            RandomAccessibleInterval<BitType> invertedBinary = new CellImgFactory<>(new BitType()).create(dims);
+            IterableInterval<BitType> invertedBinaryInterval = Views.iterable(invertedBinary);
+            invertedBinaryInterval = os.image().invert(invertedBinaryInterval, Views.iterable(binary));
+            return ImgView.wrap(os.image().distancetransform(invertedBinary, cals), factory);
+        }
     }
+
 }
