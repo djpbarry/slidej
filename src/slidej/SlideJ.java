@@ -9,27 +9,19 @@ import net.imagej.axis.AxisType;
 import net.imagej.axis.CalibratedAxis;
 import net.imagej.axis.DefaultAxisType;
 import net.imagej.axis.DefaultLinearAxis;
-import net.imagej.ops.OpService;
-import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.algorithm.morphology.distance.DistanceTransform;
-import net.imglib2.algorithm.morphology.distance.EuclidianDistanceIsotropic;
 import net.imglib2.img.Img;
-import net.imglib2.img.ImgFactory;
 import net.imglib2.img.ImgView;
-import net.imglib2.img.cell.CellImgFactory;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.UnsignedByteType;
-import net.imglib2.type.numeric.integer.UnsignedShortType;
-import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
 import slidej.analysis.Analyser;
 import slidej.io.ImageLoader;
 import slidej.segmentation.ImageThresholder;
+import slidej.transform.DistanceTransformer;
 
 import java.io.File;
 import java.io.IOException;
@@ -51,7 +43,7 @@ public class SlideJ {
         ImageMetadata meta = il.getMeta();
         List<CalibratedAxis> axes = meta.getAxes();
 
-        int neighbourhoodSize = 50;
+        int neighbourhoodSize = 5;
 
         int[] calNeighbourhood = new int[img.numDimensions()];
 
@@ -79,6 +71,24 @@ public class SlideJ {
         calNeighbourhood[caxis] = 1;
         calibrations[caxis] = 2;
 
+        ImageThresholder<T> it = new ImageThresholder<>(ImgView.wrap(Views.hyperSlice(img, caxis, 0), img.factory()), "Default");
+        it.threshold();
+
+        Img<BitType> binary = it.getOutput();
+
+        saveImage("E:/Dropbox (The Francis Crick)/Antoniana's Data/TestOut/threshold.tif",
+                (new ImageJ()).op().convert().uint8(binary));
+
+        long[] dims = new long[binary.numDimensions()];
+        binary.dimensions(dims);
+
+        double[] channelCals = new double[calibrations.length - 1];
+        System.arraycopy(calibrations, 0, channelCals, 0, caxis);
+        System.arraycopy(calibrations, caxis+1, channelCals, caxis, channelCals.length-caxis);
+
+        saveImage("E:/Dropbox (The Francis Crick)/Antoniana's Data/TestOut/distanceMap.tif",
+                DistanceTransformer.calcDistanceMap(binary,channelCals,dims));
+
         Analyser<T> a = new Analyser<>(calNeighbourhood, dimLabels, calibrations);
 
         a.analyse(img);
@@ -99,5 +109,8 @@ public class SlideJ {
         ImageJFunctions.show(img);
     }
 
+    private <T extends RealType<T> & NativeType<T>>  void saveImage(String path, Img<T> img){
+        (new ImgSaver()).saveImg(path, img);
+    }
 
 }
