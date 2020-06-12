@@ -37,18 +37,13 @@ public class SlideJ {
 
     public <T extends RealType<T> & NativeType<T>> void load(File file, int series, int neighbourhoodSize) {
         ImageLoader<T> il = new ImageLoader<>();
-
         Img<T> img = il.load(file, series);
-
         ImageMetadata meta = il.getMeta();
         List<CalibratedAxis> axes = meta.getAxes();
 
         int[] calNeighbourhood = new int[img.numDimensions()];
-
         double[] calibrations = new double[img.numDimensions()];
-
         int caxis = -1;
-
         String[] dimLabels = new String[img.numDimensions()];
 
         for (int i = 0; i < calNeighbourhood.length; i++) {
@@ -69,29 +64,9 @@ public class SlideJ {
         calNeighbourhood[caxis] = 1;
         calibrations[caxis] = 2;
 
-        ImageThresholder<T> it = new ImageThresholder<>(ImgView.wrap(Views.hyperSlice(img, caxis, 0), img.factory()), "Default");
-        it.threshold();
-
-        Img<BitType> binary = it.getOutput();
-
-        saveImage("E:/Dropbox (The Francis Crick)/Antoniana's Data/TestOut/threshold.tif",
-                (new ImageJ()).op().convert().uint8(binary));
-
-        long[] dims = new long[binary.numDimensions()];
-        binary.dimensions(dims);
-
-        double[] channelCals = new double[calibrations.length - 1];
-        System.arraycopy(calibrations, 0, channelCals, 0, caxis);
-        System.arraycopy(calibrations, caxis + 1, channelCals, caxis, channelCals.length - caxis);
-
-        saveImage("E:/Dropbox (The Francis Crick)/Antoniana's Data/TestOut/distanceMap.tif",
-                DistanceTransformer.calcDistanceMap(binary, channelCals, dims, false));
-
-        saveImage("E:/Dropbox (The Francis Crick)/Antoniana's Data/TestOut/invertedDistanceMap.tif",
-                DistanceTransformer.calcDistanceMap(binary, channelCals, dims, true));
+        generateBinariesAndMaps(img, caxis, calibrations);
 
         Analyser<T> a = new Analyser<>(calNeighbourhood, dimLabels, calibrations);
-
         a.analyse(img);
 
         try {
@@ -103,6 +78,35 @@ public class SlideJ {
             }
         } catch (IOException e) {
             GenUtils.logError(e, "Could not save results file.");
+        }
+    }
+
+    public <T extends RealType<T> & NativeType<T>> void generateBinariesAndMaps(Img<T> img, int caxis, double[] calibrations) {
+        long[] dims = new long[img.numDimensions()];
+        img.dimensions(dims);
+
+        for (int c = 0; c < dims[caxis]; c++) {
+
+            ImageThresholder<T> it = new ImageThresholder<>(ImgView.wrap(Views.hyperSlice(img, caxis, c), img.factory()), "Default");
+            it.threshold();
+
+            Img<BitType> binary = it.getOutput();
+
+            saveImage(String.format("E:/Dropbox (The Francis Crick)/Antoniana's Data/TestOut/threshold_%d.tif", c),
+                    (new ImageJ()).op().convert().uint8(binary));
+
+            long[] binDims = new long[binary.numDimensions()];
+            binary.dimensions(binDims);
+
+            double[] channelCals = new double[calibrations.length - 1];
+            System.arraycopy(calibrations, 0, channelCals, 0, caxis);
+            System.arraycopy(calibrations, caxis + 1, channelCals, caxis, channelCals.length - caxis);
+
+            saveImage(String.format("E:/Dropbox (The Francis Crick)/Antoniana's Data/TestOut/distanceMap_%d.tif", c),
+                    DistanceTransformer.calcDistanceMap(binary, channelCals, binDims, false));
+
+            saveImage(String.format("E:/Dropbox (The Francis Crick)/Antoniana's Data/TestOut/invertedDistanceMap_%d.tif", c),
+                    DistanceTransformer.calcDistanceMap(binary, channelCals, binDims, true));
         }
     }
 
