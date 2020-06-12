@@ -1,6 +1,7 @@
 package slidej;
 
 import TimeAndDate.TimeAndDate;
+import UtilClasses.GenUtils;
 
 import java.io.File;
 
@@ -13,32 +14,45 @@ public class Main {
         System.out.println(SlideJ.TITLE);
         System.out.println(TimeAndDate.getCurrentTimeAndDate());
 
-        File file;
+        File file = null;
+        int neighbourhoodSize = 50;
+        int series = 0;
 
-        for (int i = 0; i < args.length - 1; i++) {
-            switch (args[i]) {
-                case "-f":
-                    file = new File(args[i + 1]);
-                    break;
-                default:
-                    file = null;
+        try {
+            for (int i = 0; i < args.length - 1; i++) {
+                switch (args[i]) {
+                    case "-f":
+                        file = new File(args[i + 1]);
+                        break;
+                    case "-n":
+                        neighbourhoodSize = Integer.parseInt(args[i + 1]);
+                        break;
+                    case "-s":
+                        series = Integer.parseInt(args[i + 1]);
+                        break;
+                    default:
+
+                }
             }
+        } catch (NumberFormatException e) {
+            GenUtils.logError(e, "Invalid numeric argument - using default value.");
+        } catch (NullPointerException e) {
+            GenUtils.logError(e, "Invalid filename - aborting.");
+        }
 
-            if (file == null)
-                System.exit(0);
-
-            System.out.println(String.format("Input: %s", file.getAbsolutePath()));
-
-            int series = 0;
-
-            SlideJ s = new SlideJ();
-
-            s.load(file, series);
-
-            System.out.println(String.format("Done: %s", TimeAndDate.getCurrentTimeAndDate()));
-
+        if (file == null)
             System.exit(0);
 
-        }
+        System.out.println(String.format("Input: %s", file.getAbsolutePath()));
+
+        SlideJ s = new SlideJ();
+
+        s.load(file, series, neighbourhoodSize);
+
+        System.out.println(String.format("Done: %s", TimeAndDate.getCurrentTimeAndDate()));
+
+        System.exit(0);
+
     }
+}
 }

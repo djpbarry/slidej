@@ -35,15 +35,13 @@ public class SlideJ {
 
     }
 
-    public <T extends RealType<T> & NativeType<T>> void load(File file, int series) {
+    public <T extends RealType<T> & NativeType<T>> void load(File file, int series, int neighbourhoodSize) {
         ImageLoader<T> il = new ImageLoader<>();
 
         Img<T> img = il.load(file, series);
 
         ImageMetadata meta = il.getMeta();
         List<CalibratedAxis> axes = meta.getAxes();
-
-        int neighbourhoodSize = 50;
 
         int[] calNeighbourhood = new int[img.numDimensions()];
 
