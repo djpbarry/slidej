@@ -4,6 +4,7 @@ import IO.PropertyWriter;
 import UtilClasses.GenUtils;
 import ij.measure.ResultsTable;
 import io.scif.ImageMetadata;
+import io.scif.config.SCIFIOConfig;
 import io.scif.img.ImgSaver;
 import net.imagej.ImageJ;
 import net.imagej.axis.AxisType;
@@ -146,7 +147,9 @@ public class SlideJ {
     }
 
     private <T extends RealType<T> & NativeType<T>> void saveImage(String path, Img<T> img) {
-        (new ImgSaver()).saveImg(path, img);
+        SCIFIOConfig config = new SCIFIOConfig();
+        config.writerSetCompression("LZW");
+        (new ImgSaver()).saveImg(path, img, config);
     }
 
     private boolean makeOutputDirectories(File parent, String... children) {
