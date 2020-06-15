@@ -9,11 +9,11 @@ import net.imagej.axis.AxisType;
 import net.imagej.axis.CalibratedAxis;
 import net.imagej.axis.DefaultAxisType;
 import net.imagej.axis.DefaultLinearAxis;
+import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.algorithm.gauss3.Gauss3;
 import net.imglib2.img.Img;
 import net.imglib2.img.ImgFactory;
-import net.imglib2.img.ImgView;
 import net.imglib2.img.cell.CellImgFactory;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.NativeType;
@@ -107,23 +107,19 @@ public class SlideJ {
         System.arraycopy(dims, 0, channelDims, 0, caxis);
         System.arraycopy(dims, caxis + 1, channelDims, caxis, channelDims.length - caxis);
 
-//        ImgFactory<FloatType> factory = new CellImgFactory<>(new FloatType());
+        ImgFactory<FloatType> factory = new CellImgFactory<>(new FloatType());
 
         for (int c = 0; c < dims[caxis]; c++) {
-//            Img<FloatType> filtered = factory.create(channelDims);
-            RandomAccessibleInterval<T> channel = Views.hyperSlice(img, caxis, c);
-//            Gauss3.gauss(2.0, ImgView.wrap(channel, img.factory()), filtered);
-//            Img<BitType> binary = thresholdImg(filtered, "Default");
-            Img<BitType> binary = thresholdImg(ImgView.wrap(channel, img.factory()), "Default");
+            Img<FloatType> filtered = factory.create(channelDims);
+            RandomAccessible<T> channel = Views.extendValue(Views.hyperSlice(img, caxis, c), img.firstElement().createVariable());
+            Gauss3.gauss(2.0, channel, filtered);
+            Img<BitType> binary = thresholdImg(filtered, "Default");
             saveImage(String.format("%S%Sthreshold_%d.tif", binOutDir, File.separator, c),
                     (new ImageJ()).op().convert().uint8(binary));
-
             long[] binDims = new long[binary.numDimensions()];
             binary.dimensions(binDims);
-
             saveImage(String.format("%s%sdistanceMap_%d.tif", mapOutDir, File.separator, c),
                     DistanceTransformer.calcDistanceMap(binary, channelCals, binDims, false));
-
             saveImage(String.format("%s%sinvertedDistanceMap_%d.tif", mapOutDir, File.separator, c),
                     DistanceTransformer.calcDistanceMap(binary, channelCals, binDims, true));
         }
