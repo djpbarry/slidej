@@ -2,6 +2,7 @@ package slidej;
 
 import TimeAndDate.TimeAndDate;
 import UtilClasses.GenUtils;
+import slidej.properties.SlideJParams;
 
 import java.io.File;
 
@@ -11,7 +12,7 @@ public class Main {
 
         System.setProperty("java.awt.headless", "true");
 
-        System.out.println(SlideJ.TITLE);
+        System.out.println(SlideJParams.TITLE);
         System.out.println(TimeAndDate.getCurrentTimeAndDate());
 
         File file = null;

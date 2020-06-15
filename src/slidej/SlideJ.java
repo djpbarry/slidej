@@ -1,5 +1,6 @@
 package slidej;
 
+import IO.PropertyWriter;
 import UtilClasses.GenUtils;
 import ij.measure.ResultsTable;
 import io.scif.ImageMetadata;
@@ -24,6 +25,7 @@ import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
 import slidej.analysis.Analyser;
 import slidej.io.ImageLoader;
+import slidej.properties.SlideJParams;
 import slidej.segmentation.ImageThresholder;
 import slidej.transform.DistanceTransformer;
 
@@ -33,15 +35,17 @@ import java.util.List;
 
 public class SlideJ {
 
-    public static String TITLE = "SlideJ v1.0";
     private final String BINARIES = "binaries";
     private final String AUX_INPUTS = "aux_inputs";
+    private final SlideJParams props;
 
     public SlideJ() {
-
+        props = new SlideJParams();
     }
 
     public <T extends RealType<T> & NativeType<T>> void load(File file, int series, int neighbourhoodSize) {
+        props.setProperty(SlideJParams.RAW_INPUT, file.getParent());
+
         ImageLoader<T> il = new ImageLoader<>();
         Img<T> img = il.load(file, series);
         ImageMetadata meta = il.getMeta();
@@ -93,6 +97,7 @@ public class SlideJ {
         } catch (IOException e) {
             GenUtils.logError(e, "Could not save results file.");
         }
+        saveAnalysisParameters();
     }
 
     public <T extends RealType<T> & NativeType<T>> void generateBinariesAndMaps(Img<T> img, String binOutDir, String mapOutDir, int caxis, double[] calibrations) {
@@ -112,8 +117,12 @@ public class SlideJ {
         for (int c = 0; c < dims[caxis]; c++) {
             Img<FloatType> filtered = factory.create(channelDims);
             RandomAccessible<T> channel = Views.extendValue(Views.hyperSlice(img, caxis, c), img.firstElement().createVariable());
-            Gauss3.gauss(2.0, channel, filtered);
-            Img<BitType> binary = thresholdImg(filtered, "Default");
+            Gauss3.gauss(
+                    Double.parseDouble(
+                            props.getChannelProperty(SlideJParams.FILTER_RADIUS, c, SlideJParams.DEFAULT_FILTER_RADIUS)),
+                    channel, filtered);
+            Img<BitType> binary = thresholdImg(filtered,
+                    props.getChannelProperty(SlideJParams.THRESHOLD, c, SlideJParams.DEFAULT_THRESHOLD_METHOD));
             saveImage(String.format("%S%Sthreshold_%d.tif", binOutDir, File.separator, c),
                     (new ImageJ()).op().convert().uint8(binary));
             long[] binDims = new long[binary.numDimensions()];
@@ -152,6 +161,16 @@ public class SlideJ {
         File dir = new File(path);
         if (!dir.exists()) {
             dir.mkdirs();
+        }
+        return true;
+    }
+
+    private boolean saveAnalysisParameters() {
+        try {
+            PropertyWriter.saveProperties(props, props.getProperty(SlideJParams.RAW_INPUT), SlideJParams.TITLE, true);
+        } catch (Exception e) {
+            GenUtils.logError(e, "Failed to save property file.");
+            return false;
         }
         return true;
     }
