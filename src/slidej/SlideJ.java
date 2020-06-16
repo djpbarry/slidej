@@ -24,6 +24,7 @@ import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
+import org.apache.commons.io.FileUtils;
 import slidej.analysis.Analyser;
 import slidej.io.ImageLoader;
 import slidej.properties.SlideJParams;
@@ -85,8 +86,10 @@ public class SlideJ {
                 String.format("%s%s%s", file.getParent(), File.separator, AUX_INPUTS),
                 caxis, calibrations);
 
+        RandomAccessibleInterval<T> auxs = il.loadAndConcatenate(
+                new File(String.format("%s%s%s", file.getParent(), File.separator, AUX_INPUTS)), caxis);
         Analyser<T> a = new Analyser<>(calNeighbourhood, dimLabels, calibrations);
-        a.analyse(img);
+        a.analyse(Views.concatenate(caxis, img, auxs));
 
         try {
             ResultsTable[] rt = a.getRt();
@@ -162,10 +165,17 @@ public class SlideJ {
 
     private boolean makeOutputDirectory(String path) {
         File dir = new File(path);
-        if (!dir.exists()) {
-            dir.mkdirs();
+        try {
+            if (dir.exists()) {
+                FileUtils.cleanDirectory(dir);
+            } else {
+                dir.mkdirs();
+            }
+            return true;
+        } catch (IOException e) {
+            GenUtils.logError(e, "Failed to clean output directories");
+            return false;
         }
-        return true;
     }
 
     private boolean saveAnalysisParameters() {
