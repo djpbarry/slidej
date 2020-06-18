@@ -33,6 +33,7 @@ import slidej.transform.DistanceTransformer;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 public class SlideJ {
@@ -41,8 +42,15 @@ public class SlideJ {
     private final String AUX_INPUTS = "aux_inputs";
     private final SlideJParams props;
 
-    public SlideJ() {
+    public SlideJ(File propsLocation) {
         props = new SlideJParams();
+        try {
+            if (propsLocation != null) {
+                PropertyWriter.loadProperties(props, null, propsLocation);
+            }
+        } catch (IOException | InterruptedException | InvocationTargetException e) {
+            GenUtils.logError(e, "Failed to load properties file.");
+        }
     }
 
     public <T extends RealType<T> & NativeType<T>> void load(File file, int series, int neighbourhoodSize) {
@@ -121,12 +129,9 @@ public class SlideJ {
         for (int c = 0; c < dims[caxis]; c++) {
             Img<FloatType> filtered = factory.create(channelDims);
             RandomAccessible<T> channel = Views.extendValue(Views.hyperSlice(img, caxis, c), img.firstElement().createVariable());
-            Gauss3.gauss(
-                    Double.parseDouble(
-                            props.getChannelProperty(SlideJParams.FILTER_RADIUS, c, SlideJParams.DEFAULT_FILTER_RADIUS)),
-                    channel, filtered);
+            Gauss3.gauss(getSigma(3, c, calibrations), channel, filtered);
             Img<BitType> binary = thresholdImg(filtered,
-                    props.getChannelProperty(SlideJParams.THRESHOLD, c, SlideJParams.DEFAULT_THRESHOLD_METHOD));
+                    props.getChannelAxisProperty(SlideJParams.THRESHOLD, c, -1, SlideJParams.DEFAULT_THRESHOLD_METHOD));
             saveImage(String.format("%S%Sthreshold_%d.tif", binOutDir, File.separator, c),
                     (new ImageJ()).op().convert().uint8(binary));
             long[] binDims = new long[binary.numDimensions()];
@@ -186,5 +191,22 @@ public class SlideJ {
             return false;
         }
         return true;
+    }
+
+    double[] getSigma(int nAxis, int c, double[] cal) {
+        double[] sigma = new double[nAxis];
+
+        for (int d = 0; d < nAxis; d++) {
+            sigma[d] = Double.parseDouble(
+                    props.getChannelAxisProperty(
+                            SlideJParams.FILTER_RADIUS,
+                            c,
+                            d,
+                            SlideJParams.DEFAULT_FILTER_RADIUS
+                    )
+            ) / cal[d];
+        }
+
+        return sigma;
     }
 }

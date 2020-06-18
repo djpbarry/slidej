@@ -16,6 +16,7 @@ public class Main {
         System.out.println(TimeAndDate.getCurrentTimeAndDate());
 
         File file = null;
+        File props = null;
         int neighbourhoodSize = 50;
         int series = 0;
 
@@ -30,6 +31,9 @@ public class Main {
                         break;
                     case "-s":
                         series = Integer.parseInt(args[i + 1]);
+                        break;
+                    case "-p":
+                        props = new File(args[i + 1]);
                         break;
                     default:
 
@@ -46,7 +50,7 @@ public class Main {
 
         System.out.println(String.format("Input: %s", file.getAbsolutePath()));
 
-        SlideJ s = new SlideJ();
+        SlideJ s = new SlideJ(props);
 
         s.load(file, series, neighbourhoodSize);
 
