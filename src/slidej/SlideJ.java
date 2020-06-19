@@ -127,11 +127,13 @@ public class SlideJ {
         ImgFactory<FloatType> factory = new CellImgFactory<>(new FloatType());
 
         for (int c = 0; c < dims[caxis]; c++) {
+            if (!Boolean.parseBoolean(props.getChannelProperty(SlideJParams.THRESHOLD_CHANNEL, c, SlideJParams.DEFAULT_THRESHOLD_CHANNEL)))
+                continue;
             Img<FloatType> filtered = factory.create(channelDims);
             RandomAccessible<T> channel = Views.extendValue(Views.hyperSlice(img, caxis, c), img.firstElement().createVariable());
             Gauss3.gauss(getSigma(3, c, calibrations), channel, filtered);
             Img<BitType> binary = thresholdImg(filtered,
-                    props.getChannelAxisProperty(SlideJParams.THRESHOLD, c, -1, SlideJParams.DEFAULT_THRESHOLD_METHOD));
+                    props.getChannelProperty(SlideJParams.THRESHOLD, c, SlideJParams.DEFAULT_THRESHOLD_METHOD));
             saveImage(String.format("%S%Sthreshold_%d.tif", binOutDir, File.separator, c),
                     (new ImageJ()).op().convert().uint8(binary));
             long[] binDims = new long[binary.numDimensions()];
@@ -198,10 +200,9 @@ public class SlideJ {
 
         for (int d = 0; d < nAxis; d++) {
             sigma[d] = Double.parseDouble(
-                    props.getChannelAxisProperty(
+                    props.getChannelProperty(
                             SlideJParams.FILTER_RADIUS,
                             c,
-                            d,
                             SlideJParams.DEFAULT_FILTER_RADIUS
                     )
             ) / cal[d];
