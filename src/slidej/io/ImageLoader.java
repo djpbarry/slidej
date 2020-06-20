@@ -39,6 +39,9 @@ public class ImageLoader <T extends NumericType<T> & NativeType<T>> {
 		SCIFIOImgPlus<?> sciImg = new ImgOpener().openImgs(file.getAbsolutePath(), config).get(0);
 		this.meta = sciImg.getImageMetadata();
 
+		System.out.println(String.format("%s loaded.", file.getAbsolutePath()));
+		System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory()/1e+9));
+
 		return (Img<T>)sciImg;
 	}
 
