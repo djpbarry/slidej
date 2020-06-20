@@ -34,6 +34,7 @@ import slidej.transform.DistanceTransformer;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class SlideJ {
@@ -54,12 +55,19 @@ public class SlideJ {
     }
 
     public <T extends RealType<T> & NativeType<T>> void load(File file, int series, int neighbourhoodSize) {
+        System.out.println(String.format("%d processors available.", Runtime.getRuntime().availableProcessors()));
+        System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory()/1e+9));
+
         props.setProperty(SlideJParams.RAW_INPUT, file.getParent());
+
+        System.out.println(String.format("Loading %s", file.getAbsolutePath()));
 
         ImageLoader<T> il = new ImageLoader<>();
         Img<T> img = il.load(file, series);
         ImageMetadata meta = il.getMeta();
         List<CalibratedAxis> axes = meta.getAxes();
+
+        System.out.println("Calibrating...");
 
         int[] calNeighbourhood = new int[img.numDimensions()];
         double[] calibrations = new double[img.numDimensions()];
@@ -84,25 +92,45 @@ public class SlideJ {
         calNeighbourhood[caxis] = 1;
         calibrations[caxis] = 2;
 
-        if (!makeOutputDirectories(new File(file.getParent()), BINARIES, AUX_INPUTS)) {
+        System.out.println("Creating output directories...");
+
+        String output;
+        String binaryOutputs = null;
+        String mapOutputs = null;
+
+        try {
+            output = makeOutputDirectories(new File(file.getParent()), String.format("%s_output", file.getName())).get(0);
+            ArrayList<String> children = makeOutputDirectories(new File(output), BINARIES, AUX_INPUTS);
+            binaryOutputs = children.get(0);
+            mapOutputs = children.get(1);
+            mapOutputs = children.get(1);
+        } catch (IndexOutOfBoundsException e) {
             System.out.print("Failed to create output directories- aborting.");
-            return;
         }
 
+        System.out.println("Thresholding and generating distance maps...");
+
         generateBinariesAndMaps(img,
-                String.format("%s%s%s", file.getParent(), File.separator, BINARIES),
-                String.format("%s%s%s", file.getParent(), File.separator, AUX_INPUTS),
+                binaryOutputs,
+                mapOutputs,
                 caxis, calibrations);
 
+        System.out.println("Loading distance maps...");
+
         RandomAccessibleInterval<T> auxs = il.loadAndConcatenate(
-                new File(String.format("%s%s%s", file.getParent(), File.separator, AUX_INPUTS)), caxis);
+                new File(mapOutputs), caxis);
         Analyser<T> a = new Analyser<>(calNeighbourhood, dimLabels, calibrations);
+
+        System.out.println("Analysing intensities in all channels...");
+
         a.analyse(Views.concatenate(caxis, img, auxs));
+
+        System.out.println("Saving results...");
 
         try {
             ResultsTable[] rt = a.getRt();
-            File output = new File(file.getAbsolutePath() + "_results.csv");
-            if (output.exists() && !output.delete()) throw new IOException("Cannot delete existing output file.");
+            File outputData = new File(file.getAbsolutePath() + "_results.csv");
+            if (outputData.exists() && !outputData.delete()) throw new IOException("Cannot delete existing output file.");
             for (int i = 0; i < rt.length; i++) {
                 IO.DataWriter.saveResultsTable(rt[i], new File(file.getAbsolutePath() + "_results.csv"), true, i == 0);
             }
@@ -162,12 +190,15 @@ public class SlideJ {
         (new ImgSaver()).saveImg(path, img, config);
     }
 
-    private boolean makeOutputDirectories(File parent, String... children) {
-        boolean success = true;
+    private ArrayList<String> makeOutputDirectories(File parent, String... children) {
+        ArrayList<String> output = new ArrayList<>();
         for (String path : children) {
-            success = success && makeOutputDirectory(String.format("%s%s%s", parent.getAbsolutePath(), File.separator, path));
+            String fullPath = String.format("%s%s%s", parent.getAbsolutePath(), File.separator, path);
+            if (makeOutputDirectory(String.format("%s%s%s", parent.getAbsolutePath(), File.separator, path))) {
+                output.add(fullPath);
+            }
         }
-        return success;
+        return output;
     }
 
     private boolean makeOutputDirectory(String path) {

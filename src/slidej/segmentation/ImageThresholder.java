@@ -24,10 +24,10 @@ public class ImageThresholder<T extends RealType<T> & NativeType<T>> {
         T min = input.firstElement().createVariable();
         T max = input.firstElement().createVariable();
         ComputeMinMax.computeMinMax(input, min, max);
-        Histogram hist = new Histogram(new RealBinMapper(min, max, 256), input.cursor());
+        Histogram<T> hist = new Histogram<>(new RealBinMapper<>(min, max, 256), input.cursor());
         hist.process();
         int threshBin = (new AutoThresholder()).getThreshold(method, hist.getHistogram());
-        output = Thresholder.threshold(input, (T)hist.getBinCenter(threshBin), true, Runtime.getRuntime().availableProcessors());
+        output = Thresholder.threshold(input, hist.getBinCenter(threshBin), true, Runtime.getRuntime().availableProcessors());
     }
 
     public Img<BitType> getOutput() {
