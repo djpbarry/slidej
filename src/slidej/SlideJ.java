@@ -104,6 +104,9 @@ public class SlideJ {
             binaryOutputs = children.get(0);
             mapOutputs = children.get(1);
             mapOutputs = children.get(1);
+            props.setProperty(SlideJParams.OUTPUT, output);
+            props.setProperty(SlideJParams.AUX_INPUT, mapOutputs);
+            props.setProperty(SlideJParams.BIN_INPUT, binaryOutputs);
         } catch (IndexOutOfBoundsException e) {
             System.out.print("Failed to create output directories- aborting.");
         }
@@ -226,7 +229,7 @@ public class SlideJ {
 
     private boolean saveAnalysisParameters() {
         try {
-            PropertyWriter.saveProperties(props, props.getProperty(SlideJParams.RAW_INPUT), SlideJParams.TITLE, true);
+            PropertyWriter.saveProperties(props, props.getProperty(SlideJParams.OUTPUT), SlideJParams.TITLE, true);
         } catch (Exception e) {
             GenUtils.logError(e, "Failed to save property file.");
             return false;

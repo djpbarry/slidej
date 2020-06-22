@@ -6,6 +6,8 @@ public class SlideJParams extends Properties {
     public static final String THRESHOLD = "Threshold";
     public static final String RAW_INPUT = "Raw input data";
     public static final String AUX_INPUT = "Aux input data";
+    public static final String BIN_INPUT = "Binary input data";
+    public static final String OUTPUT = "Output directory";
     public static final String TITLE = "SlideJ v1.0";
     public static final String FILTER_RADIUS = "Filter radius";
     public static final String DEFAULT_FILTER_RADIUS = "2.0";
