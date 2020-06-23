@@ -1,98 +1,97 @@
 Manifest-Version: 1.0
 Main-Class: slidej.Main
-Class-Path: imageware-2.0.0.jar bigdataviewer-vistools-1.0.0-beta-15.jar
-  blas-0.8.jar groovy-xml-2.4.8.jar gentyref-1.1.0.jar utils-0.8.1906.ja
- r OMEVisual-1.1.2.jar mapdb-1.0.3.jar f2jutil-0.8.jar jgrapht-core-1.3.
- 0.jar jgoodies-forms-1.7.2.jar scripting-jruby-0.3.0.jar metakit-5.3.2.
- jar ome-jai-0.1.0.jar ome-poi-5.3.3.jar ome-xml-6.1.0.jar jxrlib-all-0.
- 2.4.jar ome-codecs-0.3.0.jar ome-common-6.0.4.jar jai_imageio-5.1.10.ja
- r ome-mdbtools-5.3.2.jar specification-6.1.0.jar bio-formats-tools-6.3.
- 0.jar turbojpeg-6.5.1-20200515.110102-3.jar formats-api-6.5.1-20200515.
- 110120-3.jar formats-bsd-6.5.1-20200515.110603-3.jar formats-gpl-6.5.1-
- 20200612.195756-5.jar scala-library-2.12.1.jar spim_data-2.2.2.jar jply
- -0.2.0.jar scifio-cli-0.5.0.jar bounce-0.18.jar scripting-renjin-0.2.2.
- jar args4j-2.0.25.jar batik-xml-1.10.jar miglayout-3.7.4-swing.jar scij
- ava-table-0.2.0.jar jython-shaded-2.7.1.jar codemodel-2.6.jar imagej-no
- tebook-0.3.0.jar jnr-unixsocket-0.17.jar imagej-ui-swing-0.23.1.jar j3d
- core-1.6.0-scijava-2.jar scifio-jai-imageio-1.1.1.jar joda-time-2.10.1.
- jar jdom2-2.0.6.jar batik-anim-1.10.jar pal-optimization-2.0.1.jar jnr-
- netdb-1.1.6.jar fiji-lib-2.1.2.jar scifio-0.37.3.jar renjin-appl-0.8.19
- 06.jar perf4j-0.9.13.jar xmpcore-5.1.2.jar imglib2-ij-2.0.0-beta-44.jar
-  imglib2-5.6.3.jar mij-1.3.6-fiji2.jar jama-1.0.3.jar asm-tree-5.0.4.ja
- r batik-svg-dom-1.10.jar imglib2-algorithm-0.11.1.jar eventbus-1.4.jar 
- maven-scm-provider-svnexe-1.4.jar VIB-lib-2.2.0.jar jnr-posix-3.0.44.ja
- r scripting-groovy-0.2.7.jar imagej-mesh-0.7.1.jar modulator-1.0.jar ba
- tik-util-1.10.jar jcommander-1.48.jar yecht-1.0.jar scijava-config-2.0.
- 2.jar imagej-ops-0.43.1.jar commons-beanutils-1.9.3.jar imagescience.ja
- r udunits-4.3.18.jar bsh-2.0b6.jar markdownj-0.3.0-1.0.2b4.jar snakeyam
- l-1.23.jar asm-commons-5.0.4.jar scijava-plugins-text-markdown-0.1.3.ja
- r jruby-stdlib-9.1.17.0.jar imagej-updater-0.10.4.jar quickhull3d-1.0.0
- .jar mcib3d-core-3.96.2.jar mcib3d_plugins-3.96.2.jar mines-jtk-2015112
- 5.jar object-inspector-0.1.jar imagej-plugins-batch-0.1.1.jar log4j-1.2
- .17.jar batik-constants-1.10.jar gpcj-2.2.0.jar jgraphx-3.4.1.3.jar Mor
- phoLibJ_-1.4.2.1.jar minimaven-2.2.1.jar base64-2.3.8.jar vecmath-1.6.0
- -scijava-2.jar imagej-mesh-io-0.1.2.jar clij-coremem-2.0.0.10.jar image
- j-plugins-commands-0.8.1.jar commons-logging-1.2.jar batik-i18n-1.10.ja
- r jsch-0.1.55.jar native-lib-loader-2.3.2.jar bigdataviewer-core-7.0.0.
- jar jackrabbit-webdav-2.19.1.jar batik-gvt-1.10.jar preloader_-0.1.1.ja
- r gpars-1.2.1.jar javacl-1.0.0-RC4.jar jna-4.5.2.jar batik-parser-1.10.
- jar filters-2.0.235.jar scijava-listeners-1.0.0-beta-2.jar scifio-bf-co
- mpat-3.0.0.jar imagej-plugins-uploader-webdav-0.3.1.jar jung-api-2.0.1.
- jar mpicbg-1.2.0.jar logback-classic-1.2.3.jar languagesupport-2.6.0.ja
- r bio-formats_plugins-6.5.1-20200515.110700-3.jar imglib2-ui-2.0.0.jar 
- jhotdraw-7.6.0.jar ffmpeg-4.1-1.4.4.jar asm-5.0.4.jar commons-io-2.6.ja
- r imagej-deprecated-0.1.2.jar autocomplete-2.6.1.jar scala-reflect-2.12
- .1.jar gson-2.8.5.jar imglib2-algorithm-fft-0.2.0.jar multiverse-core-0
- .7.0.jar jsoup-1.7.2.jar clij-ops-1.7.0.10.jar jheaps-0.9.jar commons-c
- sv-1.6.jar stats-0.8.1906.jar weave_jy2java-2.1.1.jar jcodings-1.0.27.j
- ar joml-1.9.12.jar dirgra-0.3.jar imagej-plugins-uploader-ssh-0.3.2.jar
-  jai-core-1.1.3.jar itextpdf-5.5.13.jar scijava-ui-swing-0.12.0.jar ima
- gej-launcher-4.0.5.jar jitk-tps-3.0.1.jar clojure-1.8.0.jar jpedalSTD-2
- .80b11.jar scijava-common-2.80.1.jar jocl-2.0.2.jar bridj-0.7.0.jar img
- lib2-algorithm-gpl-0.2.3.jar clij-clearcl-2.0.0.10.jar scifio-ome-xml-0
- .15.0.jar jcommon-1.0.24.jar scripting-beanshell-0.3.3.jar ejml-0.24.ja
- r jai-codec-1.1.3.jar image4j-0.7.jar scripting-java-0.4.1.jar renjin-s
- cript-engine-0.8.1906.jar scijava-plugins-commands-0.2.3.jar fiji-2.0.0
- -pre-8.jar asm-analysis-4.0.jar xercesImpl-2.8.1.jar joal-2.3.2.jar jep
- -2.4.2.jar ahocorasick-0.2.4.jar mtj-1.0.4.jar jnr-x86asm-1.0.2.jar ivy
- -2.4.0.jar T2-TreelineGraph-1.1.2.jar scijava-plugins-text-plain-0.1.3.
- jar groovy-json-2.4.8.jar jnr-ffi-1.0.7.jar lapack-0.8.jar xmlgraphics-
- commons-2.3.jar jhdf5-14.12.6.jar commons-httpclient-3.1.jar commons-ma
- th3-3.6.1.jar minlog-1.2.jar batik-ext-1.10.jar httpclient-4.5.11.jar s
- wing-checkbox-tree-1.0.2.jar jsr166y-1.7.0.jar guava-21.0.jar maven-scm
- -provider-svn-commons-1.4.jar nativelibs4java-utils-1.6.jar nailgun-ser
- ver-0.9.1.jar j3dutils-1.6.0-scijava-2.jar postgresql-9.1-901-1.jdbc4.j
- ar javassist-3.24.0-GA.jar imagej-ui-awt-0.3.1.jar ui-behaviour-1.7.4.j
- ar httpcore-4.4.13.jar VectorString-2.0.2.jar batik-script-1.10.jar ope
- ncsv-3.9.jar batik-css-1.10.jar gcc-runtime-0.8.1906.jar rsyntaxtextare
- a-2.6.1.jar xerbla-0.8.jar script-editor-0.5.5.jar jffi-1.2.16.jar bati
- k-dom-1.10.jar imagej-plugins-tools-0.3.1.jar kryo-2.24.0.jar commons-l
- ang-2.6.jar imagej-2.0.0-rc-69.jar json-20090211.jar trakem2-transform-
- 1.0.1.jar jruby-core-9.1.17.0.jar prettytime-4.0.1.Final.jar objenesis-
- 2.1.jar fiji-compat-2.0.3.jar jnr-enxio-0.16.jar invokebinder-1.10.jar 
- scala-compiler-2.12.1.jar batik-svggen-1.10.jar collections-generic-4.0
- 1.jar imglib2-roi-0.7.0.jar scripting-jython-0.4.2.jar T2-NIT-1.1.2.jar
-  maven-scm-api-1.4.jar batik-bridge-1.10.jar ijp-kheops-0.1.6.jar swing
- x-1.6.1.jar JWlz-1.4.0.jar commons-compress-1.4.1.jar scifio-lifesci-0.
- 8.0.jar unsafe-fences-1.0.jar bytelist-1.0.15.jar imglib2-realtransform
- -2.2.1.jar imglib2-cache-1.0.0-beta-11.jar gluegen-rt-2.3.2.jar batch-p
- rocessor-0.4.1.jar jogl-all-2.3.2.jar ojalgo-45.1.1.jar rhino-1.7.6.jar
-  batik-awt-util-1.10.jar slf4j-api-1.7.25.jar scifio-hdf5-0.1.3.jar log
- back-core-1.2.3.jar scripting-javascript-0.4.4.jar opencl4java-1.0.0-RC
- 4.jar scijava-plugins-platforms-0.3.1.jar commons-vfs2-2.0.jar bij.jar 
- parsington-1.0.4.jar netcdf-4.3.22.jar netlib-java-0.9.3-renjin-patched
- -2.jar ij-1.52p.jar caffeine-2.4.0.jar metadata-extractor-2.6.2.jar com
- mons-codec-1.11.jar joni-2.1.15.jar TrackMate_-5.2.0.jar scripting-scal
- a-0.2.1.jar xz-1.0.jar jzlib-1.1.3.jar jfreechart-1.5.0.jar javacpp-1.4
- .4.jar jnr-constants-0.9.9.jar jung-graph-impl-2.0.1.jar legacy-imglib1
- -1.1.9.jar op-finder-0.1.3.jar scijava-ui-awt-0.1.6.jar scala-xml_2.12-
- 1.0.6.jar renjin-core-0.8.1906.jar options-1.4.jar commons-lang3-3.8.1.
- jar swing-worker-1.1.jar wavelets-2.0.0.jar groovy-2.4.8.jar ij1-patche
- r-0.12.9.jar groovy-templates-2.4.8.jar jdatepicker-1.3.2.jar commons-m
- ath-2.2.jar xml-apis-ext-1.3.04.jar jffi-1.2.16-native.jar jtransforms-
- 2.4.jar plexus-utils-1.5.6.jar clij-core-1.7.0.10.jar imagej-common-0.2
- 8.2.jar trove4j-3.0.3.jar asm-util-5.0.4.jar scijava-search-0.5.0.jar j
- goodies-common-1.7.0.jar renjin-gnur-runtime-0.8.1906.jar ij_blob-1.4.9
- .jar commons-collections-3.2.2.jar regexp-1.3.jar scripting-clojure-0.1
- .6.jar weka-dev-3.9.3.jar
+Class-Path: javacpp-1.4.4.jar stats-0.8.1906.jar pal-optimization-2.0.1.
+ jar minimaven-2.2.1.jar scripting-renjin-0.2.2.jar jpedalSTD-2.80b11.ja
+ r jcommander-1.48.jar trakem2-transform-1.0.1.jar T2-NIT-1.1.2.jar joda
+ -time-2.10.1.jar weave_jy2java-2.1.1.jar legacy-imglib1-1.1.9.jar image
+ j-plugins-commands-0.8.1.jar udunits-4.3.18.jar scijava-plugins-platfor
+ ms-0.3.1.jar jruby-stdlib-9.1.17.0.jar ij1-patcher-0.12.9.jar jffi-1.2.
+ 16.jar imagej-notebook-0.3.0.jar xmlgraphics-commons-2.3.jar jackrabbit
+ -webdav-2.19.1.jar imglib2-realtransform-2.2.1.jar jgraphx-3.4.1.3.jar 
+ scifio-0.37.3.jar TrackMate_-5.2.0.jar batik-awt-util-1.10.jar scifio-o
+ me-xml-0.15.0.jar groovy-json-2.4.8.jar autocomplete-2.6.1.jar netcdf-4
+ .3.22.jar ijp-kheops-0.1.6.jar imagej-mesh-io-0.1.2.jar scripting-groov
+ y-0.2.7.jar jcommon-1.0.24.jar jnr-unixsocket-0.17.jar ij-1.52p.jar htt
+ pcore-4.4.13.jar imagej-updater-0.10.4.jar commons-collections-3.2.2.ja
+ r batik-bridge-1.10.jar jffi-1.2.16-native.jar imglib2-ui-2.0.0.jar met
+ adata-extractor-2.6.2.jar imagej-ui-swing-0.23.1.jar mapdb-1.0.3.jar ej
+ ml-0.24.jar javassist-3.24.0-GA.jar asm-5.0.4.jar asm-util-5.0.4.jar op
+ tions-1.4.jar httpclient-4.5.11.jar JWlz-1.4.0.jar groovy-templates-2.4
+ .8.jar jhotdraw-7.6.0.jar batik-svggen-1.10.jar asm-commons-5.0.4.jar b
+ atik-parser-1.10.jar dirgra-0.3.jar gluegen-rt-2.3.2.jar commons-math3-
+ 3.6.1.jar OMEVisual-1.1.2.jar plexus-utils-1.5.6.jar j3dutils-1.6.0-sci
+ java-2.jar batik-dom-1.10.jar jama-1.0.3.jar batik-css-1.10.jar jep-2.4
+ .2.jar asm-tree-5.0.4.jar jocl-2.3.2.jar jply-0.2.0.jar commons-lang-2.
+ 6.jar scala-library-2.12.1.jar scripting-jruby-0.3.0.jar commons-httpcl
+ ient-3.1.jar log4j-1.2.17.jar logback-classic-1.2.3.jar imagej-common-0
+ .28.2.jar quickhull3d-1.0.0.jar mcib3d-core-3.96.2.jar mcib3d_plugins-3
+ .96.2.jar snakeyaml-1.23.jar bij.jar imglib2-cache-1.0.0-beta-11.jar ba
+ tik-ext-1.10.jar batik-svg-dom-1.10.jar batik-xml-1.10.jar imageware-2.
+ 0.0.jar rhino-1.7.6.jar commons-logging-1.2.jar jzlib-1.1.3.jar jsoup-1
+ .7.2.jar xz-1.0.jar collections-generic-4.01.jar f2jutil-0.8.jar bigdat
+ aviewer-vistools-1.0.0-beta-15.jar modulator-1.0.jar T2-TreelineGraph-1
+ .1.2.jar imagej-mesh-0.7.1.jar scijava-table-0.2.0.jar ivy-2.4.0.jar ff
+ mpeg-4.1-1.4.4.jar commons-io-2.6.jar VectorString-2.0.2.jar imglib2-al
+ gorithm-fft-0.2.0.jar bio-formats_plugins-6.5.1-20200515.110700-3.jar g
+ roovy-xml-2.4.8.jar unsafe-fences-1.0.jar minlog-1.2.jar scripting-bean
+ shell-0.3.3.jar imagej-2.0.0-rc-69.jar bounce-0.18.jar maven-scm-provid
+ er-svn-commons-1.4.jar scifio-bf-compat-3.0.0.jar ops-experiments-commo
+ n-0.1.0-SNAPSHOT.jar fiji-2.0.0-pre-8.jar opencsv-3.9.jar jna-4.5.2.jar
+  clojure-1.8.0.jar MorphoLibJ_-1.4.2.1.jar joal-2.3.2.jar fiji-compat-2
+ .0.3.jar xerbla-0.8.jar VIB-lib-2.2.0.jar clij-bigviewer_-0.1.0.jar per
+ f4j-0.9.13.jar imagej-deprecated-0.1.2.jar jgrapht-core-1.3.0.jar renji
+ n-core-0.8.1906.jar trove4j-3.0.3.jar ojalgo-45.1.1.jar jtransforms-2.4
+ .jar jnr-ffi-1.0.7.jar xercesImpl-2.8.1.jar imagej-plugins-batch-0.1.1.
+ jar jfreechart-1.5.0.jar weka-dev-3.9.3.jar batik-util-1.10.jar gentyre
+ f-1.1.0.jar joni-2.1.15.jar object-inspector-0.1.jar scifio-lifesci-0.8
+ .0.jar gpars-1.2.1.jar mij-1.3.6-fiji2.jar jdom2-2.0.6.jar scripting-ja
+ va-0.4.1.jar jsch-0.1.55.jar scifio-hdf5-0.1.3.jar xmpcore-5.1.2.jar jc
+ odings-1.0.27.jar jsr166y-1.7.0.jar logback-core-1.2.3.jar swing-checkb
+ ox-tree-1.0.2.jar commons-math-2.2.jar batik-i18n-1.10.jar scijava-sear
+ ch-0.5.0.jar swing-worker-1.1.jar args4j-2.0.25.jar imagej-plugins-tool
+ s-0.3.1.jar renjin-script-engine-0.8.1906.jar slf4j-api-1.7.25.jar jgoo
+ dies-common-1.7.0.jar ui-behaviour-1.7.4.jar imagej-ops-0.43.1.jar migl
+ ayout-3.7.4-swing.jar caffeine-2.4.0.jar regexp-1.3.jar jhdf5-14.12.6.j
+ ar scripting-clojure-0.1.6.jar wavelets-2.0.0.jar imglib2-algorithm-gpl
+ -0.2.3.jar joml-1.9.12.jar maven-scm-provider-svnexe-1.4.jar bsh-2.0b6.
+ jar batch-processor-0.4.1.jar swingx-1.6.1.jar j3dcore-1.6.0-scijava-2.
+ jar scijava-ui-swing-0.12.0.jar scripting-jython-0.4.2.jar batik-consta
+ nts-1.10.jar jnr-constants-0.9.9.jar scala-xml_2.12-1.0.6.jar jython-sh
+ aded-2.7.1.jar renjin-appl-0.8.1906.jar imglib2-algorithm-0.11.1.jar im
+ age4j-0.7.jar prettytime-4.0.1.Final.jar scijava-plugins-text-markdown-
+ 0.1.3.jar nailgun-server-0.9.1.jar base64-2.3.8.jar jnr-x86asm-1.0.2.ja
+ r filters-2.0.235.jar batik-script-1.10.jar jogl-all-2.3.2.jar gson-2.8
+ .5.jar yecht-1.0.jar mtj-1.0.4.jar jung-graph-impl-2.0.1.jar jnr-enxio-
+ 0.16.jar markdownj-0.3.0-1.0.2b4.jar metakit-5.3.2.jar ome-jai-0.1.0.ja
+ r ome-poi-5.3.3.jar ome-xml-6.1.0.jar jxrlib-all-0.2.4.jar ome-codecs-0
+ .3.0.jar ome-common-6.0.4.jar jai_imageio-5.1.10.jar ome-mdbtools-5.3.2
+ .jar specification-6.1.0.jar bio-formats-tools-6.3.0.jar turbojpeg-6.5.
+ 1-20200515.110102-3.jar formats-api-6.5.1-20200515.110120-3.jar formats
+ -bsd-6.5.1-20200515.110603-3.jar formats-gpl-6.5.1-20200612.195756-5.ja
+ r mpicbg-1.2.0.jar script-editor-0.5.5.jar xml-apis-ext-1.3.04.jar invo
+ kebinder-1.10.jar lapack-0.8.jar rsyntaxtextarea-2.6.1.jar codemodel-2.
+ 6.jar jnr-netdb-1.1.6.jar scifio-cli-0.5.0.jar parsington-1.0.4.jar min
+ es-jtk-20151125.jar batik-anim-1.10.jar jnr-posix-3.0.44.jar fiji-lib-2
+ .1.2.jar imagescience.jar scijava-ui-awt-0.1.6.jar gcc-runtime-0.8.1906
+ .jar scala-reflect-2.12.1.jar netlib-java-0.9.3-renjin-patched-2.jar ji
+ tk-tps-3.0.1.jar gpcj-2.2.0.jar op-finder-0.1.3.jar scripting-javascrip
+ t-0.4.4.jar scripting-scala-0.2.1.jar jai-codec-1.1.3.jar multiverse-co
+ re-0.7.0.jar objenesis-2.1.jar eventbus-1.4.jar commons-vfs2-2.0.jar sc
+ ala-compiler-2.12.1.jar bigdataviewer-core-7.0.0.jar maven-scm-api-1.4.
+ jar commons-codec-1.11.jar imglib2-roi-0.7.0.jar commons-compress-1.4.1
+ .jar scijava-plugins-commands-0.2.3.jar guava-21.0.jar jruby-core-9.1.1
+ 7.0.jar renjin-gnur-runtime-0.8.1906.jar batik-gvt-1.10.jar jai-core-1.
+ 1.3.jar ops-experiments-opencl-0.3.0.jar json-20090211.jar scijava-plug
+ ins-text-plain-0.1.3.jar imagej-plugins-uploader-ssh-0.3.2.jar native-l
+ ib-loader-2.3.2.jar scifio-jai-imageio-1.1.1.jar commons-csv-1.6.jar co
+ mmons-beanutils-1.9.3.jar blas-0.8.jar vecmath-1.6.0-scijava-2.jar groo
+ vy-2.4.8.jar scijava-config-2.0.2.jar kryo-2.24.0.jar scijava-common-2.
+ 80.1.jar webcam-capture-0.3.12.jar ahocorasick-0.2.4.jar jung-api-2.0.1
+ .jar imagej-launcher-4.0.5.jar bytelist-1.0.15.jar imglib2-5.6.3.jar im
+ agej-ui-awt-0.3.1.jar languagesupport-2.6.0.jar spim_data-2.2.2.jar ima
+ gej-plugins-uploader-webdav-0.3.1.jar jgoodies-forms-1.7.2.jar utils-0.
+ 8.1906.jar jheaps-0.9.jar scijava-listeners-1.0.0-beta-2.jar postgresql
+ -9.1-901-1.jdbc4.jar imglib2-ij-2.0.0-beta-44.jar asm-analysis-4.0.jar 
+ itextpdf-5.5.13.jar jdatepicker-1.3.2.jar ij_blob-1.4.9.jar commons-lan
+ g3-3.8.1.jar
 
