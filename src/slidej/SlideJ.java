@@ -6,7 +6,6 @@ import ij.measure.ResultsTable;
 import io.scif.ImageMetadata;
 import io.scif.config.SCIFIOConfig;
 import io.scif.img.ImgSaver;
-import net.imagej.ImageJ;
 import net.imagej.axis.AxisType;
 import net.imagej.axis.CalibratedAxis;
 import net.imagej.axis.DefaultAxisType;
@@ -14,18 +13,20 @@ import net.imagej.axis.DefaultLinearAxis;
 import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.algorithm.gauss3.Gauss3;
-import net.imglib2.cache.img.DiskCachedCellImgFactory;
 import net.imglib2.img.Img;
 import net.imglib2.img.ImgFactory;
+import net.imglib2.img.cell.CellImgFactory;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
 import org.apache.commons.io.FileUtils;
 import slidej.analysis.Analyser;
+import slidej.convert.ConvertBinary;
 import slidej.io.ImageLoader;
 import slidej.properties.SlideJParams;
 import slidej.segmentation.ImageThresholder;
@@ -60,7 +61,7 @@ public class SlideJ {
         props.setProperty(SlideJParams.RAW_INPUT, file.getParent());
 
         System.out.println(String.format("Loading %s", file.getAbsolutePath()));
-        System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory()/1e+9));
+        System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
 
         ImageLoader<T> il = new ImageLoader<>();
         Img<T> img = il.load(file, series);
@@ -133,7 +134,8 @@ public class SlideJ {
         try {
             ResultsTable[] rt = a.getRt();
             File outputData = new File(file.getAbsolutePath() + "_results.csv");
-            if (outputData.exists() && !outputData.delete()) throw new IOException("Cannot delete existing output file.");
+            if (outputData.exists() && !outputData.delete())
+                throw new IOException("Cannot delete existing output file.");
             for (int i = 0; i < rt.length; i++) {
                 IO.DataWriter.saveResultsTable(rt[i], new File(file.getAbsolutePath() + "_results.csv"), true, i == 0);
             }
@@ -155,7 +157,7 @@ public class SlideJ {
         System.arraycopy(dims, 0, channelDims, 0, caxis);
         System.arraycopy(dims, caxis + 1, channelDims, caxis, channelDims.length - caxis);
 
-        ImgFactory<FloatType> factory = new DiskCachedCellImgFactory<>(new FloatType());
+        ImgFactory<FloatType> factory = new CellImgFactory<>(new FloatType());
 
         for (int c = 0; c < dims[caxis]; c++) {
             if (!Boolean.parseBoolean(props.getChannelProperty(SlideJParams.THRESHOLD_CHANNEL, c, SlideJParams.DEFAULT_THRESHOLD_CHANNEL)))
@@ -164,23 +166,23 @@ public class SlideJ {
             Img<FloatType> filtered = factory.create(channelDims);
             RandomAccessible<T> channel = Views.extendValue(Views.hyperSlice(img, caxis, c), img.firstElement().createVariable());
             Gauss3.gauss(getSigma(3, c, calibrations), channel, filtered);
-            System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory()/1e+9));
+            System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
             System.out.println(String.format("Thresholding channel %d.", c));
             Img<BitType> binary = thresholdImg(filtered,
                     props.getChannelProperty(SlideJParams.THRESHOLD, c, SlideJParams.DEFAULT_THRESHOLD_METHOD));
-            System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory()/1e+9));
+            System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
             saveImage(String.format("%S%Sthreshold_%d.tif", binOutDir, File.separator, c),
-                    (new ImageJ()).op().convert().uint8(binary));
+                    ConvertBinary.convertBinary(binary, new UnsignedByteType()));
             long[] binDims = new long[binary.numDimensions()];
             binary.dimensions(binDims);
             System.out.println(String.format("Calculating distance map 1 for channel %d.", c));
             saveImage(String.format("%s%sdistanceMap_%d.tif", mapOutDir, File.separator, c),
                     DistanceTransformer.calcDistanceMap(binary, channelCals, binDims, false));
-            System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory()/1e+9));
+            System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
             System.out.println(String.format("Calculating distance map 2 for channel %d.", c));
             saveImage(String.format("%s%sinvertedDistanceMap_%d.tif", mapOutDir, File.separator, c),
                     DistanceTransformer.calcDistanceMap(binary, channelCals, binDims, true));
-            System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory()/1e+9));
+            System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
         }
     }
 
