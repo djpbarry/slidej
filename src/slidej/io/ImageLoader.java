@@ -34,13 +34,9 @@ public class ImageLoader <T extends NumericType<T> & NativeType<T>> {
 	public Img<T> load(File file, int series) {
 		SCIFIOConfig config = new SCIFIOConfig();
 		config.imgOpenerSetIndex(series);
-		config.imgOpenerSetImgModes(SCIFIOConfig.ImgMode.CELL);
 
 		SCIFIOImgPlus<?> sciImg = new ImgOpener().openImgs(file.getAbsolutePath(), config).get(0);
 		this.meta = sciImg.getImageMetadata();
-
-		System.out.println(String.format("%s loaded.", file.getAbsolutePath()));
-		System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory()/1e+9));
 
 		return (Img<T>)sciImg;
 	}

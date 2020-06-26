@@ -6,6 +6,7 @@ import ij.measure.ResultsTable;
 import io.scif.ImageMetadata;
 import io.scif.config.SCIFIOConfig;
 import io.scif.img.ImgSaver;
+import net.imagej.ImageJ;
 import net.imagej.axis.AxisType;
 import net.imagej.axis.CalibratedAxis;
 import net.imagej.axis.DefaultAxisType;
@@ -13,20 +14,20 @@ import net.imagej.axis.DefaultLinearAxis;
 import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.algorithm.gauss3.Gauss3;
+import net.imglib2.cache.img.DiskCachedCellImgFactory;
+import net.imglib2.cache.img.DiskCachedCellImgOptions;
 import net.imglib2.img.Img;
 import net.imglib2.img.ImgFactory;
-import net.imglib2.img.cell.CellImgFactory;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.view.Views;
 import org.apache.commons.io.FileUtils;
 import slidej.analysis.Analyser;
-import slidej.convert.ConvertBinary;
+import slidej.io.DiskCacheOptions;
 import slidej.io.ImageLoader;
 import slidej.properties.SlideJParams;
 import slidej.segmentation.ImageThresholder;
@@ -67,6 +68,9 @@ public class SlideJ {
         Img<T> img = il.load(file, series);
         ImageMetadata meta = il.getMeta();
         List<CalibratedAxis> axes = meta.getAxes();
+
+        System.out.println(String.format("%s loaded.", file.getAbsolutePath()));
+        System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
 
         System.out.println("Calibrating...");
 
@@ -125,9 +129,15 @@ public class SlideJ {
                 new File(mapOutputs), caxis);
         Analyser<T> a = new Analyser<>(calNeighbourhood, dimLabels, calibrations);
 
+        System.out.println("Loading aux channels and concatanating datset...");
+
+        RandomAccessibleInterval<T> concat = Views.concatenate(caxis, img, auxs);
+
+        System.out.println("Done.");
+        System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
         System.out.println("Analysing intensities in all channels...");
 
-        a.analyse(Views.concatenate(caxis, img, auxs));
+        a.analyse(concat);
 
         System.out.println("Saving results...");
 
@@ -157,31 +167,46 @@ public class SlideJ {
         System.arraycopy(dims, 0, channelDims, 0, caxis);
         System.arraycopy(dims, caxis + 1, channelDims, caxis, channelDims.length - caxis);
 
-        ImgFactory<FloatType> factory = new CellImgFactory<>(new FloatType());
+        ImgFactory<FloatType> factory = new DiskCachedCellImgFactory<>(new FloatType(), new DiskCacheOptions().getOptions());
 
         for (int c = 0; c < dims[caxis]; c++) {
             if (!Boolean.parseBoolean(props.getChannelProperty(SlideJParams.THRESHOLD_CHANNEL, c, SlideJParams.DEFAULT_THRESHOLD_CHANNEL)))
                 continue;
-            System.out.println(String.format("Filtering channel %d.", c));
+            System.out.println(String.format("Creating filtered image for channel %d.", c));
+            System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
             Img<FloatType> filtered = factory.create(channelDims);
             RandomAccessible<T> channel = Views.extendValue(Views.hyperSlice(img, caxis, c), img.firstElement().createVariable());
+            System.out.println(String.format("Filtering channel %d.", c));
+            System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
             Gauss3.gauss(getSigma(3, c, calibrations), channel, filtered);
+            System.out.println(String.format("Filtering done."));
             System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
             System.out.println(String.format("Thresholding channel %d.", c));
             Img<BitType> binary = thresholdImg(filtered,
                     props.getChannelProperty(SlideJParams.THRESHOLD, c, SlideJParams.DEFAULT_THRESHOLD_METHOD));
+            System.out.println(String.format("Thresholding done."));
             System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
+            System.out.println(String.format("Saving thresholded image for channel %d.", c));
             saveImage(String.format("%S%Sthreshold_%d.tif", binOutDir, File.separator, c),
-                    ConvertBinary.convertBinary(binary, new UnsignedByteType()));
+                    (new ImageJ()).op().convert().uint8(binary));
+            System.out.println(String.format("Saved."));
+            System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
             long[] binDims = new long[binary.numDimensions()];
             binary.dimensions(binDims);
             System.out.println(String.format("Calculating distance map 1 for channel %d.", c));
-            saveImage(String.format("%s%sdistanceMap_%d.tif", mapOutDir, File.separator, c),
-                    DistanceTransformer.calcDistanceMap(binary, channelCals, binDims, false));
+            Img<FloatType> dm1 = DistanceTransformer.calcDistanceMap(binary, channelCals, binDims, false);
+            System.out.println(String.format("Calculated."));
+            System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
+            System.out.println(String.format("Saving distance map 1 for channel %d.", c));
+            saveImage(String.format("%s%sdistanceMap_%d.tif", mapOutDir, File.separator, c),dm1);
+            System.out.println(String.format("Saved."));
             System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
             System.out.println(String.format("Calculating distance map 2 for channel %d.", c));
-            saveImage(String.format("%s%sinvertedDistanceMap_%d.tif", mapOutDir, File.separator, c),
-                    DistanceTransformer.calcDistanceMap(binary, channelCals, binDims, true));
+            Img<FloatType> dm2 = DistanceTransformer.calcDistanceMap(binary, channelCals, binDims, true);
+            System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
+            System.out.println(String.format("Saving distance map 2 for channel %d.", c));
+            saveImage(String.format("%s%sinvertedDistanceMap_%d.tif", mapOutDir, File.separator, c), dm2);
+            System.out.println(String.format("Saved."));
             System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
         }
     }

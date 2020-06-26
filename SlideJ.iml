@@ -363,16 +363,6 @@
     <orderEntry type="module-library">
       <library>
         <CLASSES>
-          <root url="file://$USER_HOME$/fiji-nojre/Fiji.app/jars/bio-formats" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-        <jarDirectory url="file://$USER_HOME$/fiji-nojre/Fiji.app/jars/bio-formats" recursive="false" />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
           <root url="jar://$USER_HOME$/fiji-nojre/Fiji.app/jars/log4j-1.2.17.jar!/" />
         </CLASSES>
         <JAVADOC />
@@ -2276,6 +2266,16 @@
         </CLASSES>
         <JAVADOC />
         <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="file://$USER_HOME$/fiji-nojre/Fiji.app/jars/bio-formats" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+        <jarDirectory url="file://$USER_HOME$/fiji-nojre/Fiji.app/jars/bio-formats" recursive="false" />
       </library>
     </orderEntry>
   </component>

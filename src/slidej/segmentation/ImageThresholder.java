@@ -4,12 +4,13 @@ import ij.process.AutoThresholder;
 import net.imglib2.algorithm.stats.ComputeMinMax;
 import net.imglib2.algorithm.stats.Histogram;
 import net.imglib2.algorithm.stats.RealBinMapper;
+import net.imglib2.cache.img.DiskCachedCellImgFactory;
 import net.imglib2.img.Img;
-import net.imglib2.img.cell.CellImgFactory;
 import net.imglib2.loops.LoopBuilder;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.RealType;
+import slidej.io.DiskCacheOptions;
 
 public class ImageThresholder<T extends RealType<T> & NativeType<T>> {
     private final Img<T> input;
@@ -19,7 +20,7 @@ public class ImageThresholder<T extends RealType<T> & NativeType<T>> {
     public ImageThresholder(final Img<T> input, final String method) {
         this.input = input;
         this.method = method;
-        this.output = new CellImgFactory<>(new BitType()).create(input);
+        this.output = new DiskCachedCellImgFactory<>(new BitType(), new DiskCacheOptions().getOptions()).create(input);
     }
 
     public void threshold() {
@@ -35,8 +36,6 @@ public class ImageThresholder<T extends RealType<T> & NativeType<T>> {
         thresholdImage(hist.getBinCenter(threshBin));
 
         //output = Thresholder.threshold(input, hist.getBinCenter(threshBin), true, Runtime.getRuntime().availableProcessors());
-        System.out.println("Image thresholded.");
-        System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
     }
 
     private void thresholdImage(T threshold) {
