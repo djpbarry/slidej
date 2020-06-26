@@ -19,7 +19,7 @@ public class DiskCacheOptions {
         options = options.cacheType(DiskCachedCellImgOptions.CacheType.BOUNDED);
         options = options.cellDimensions(100);
         options=options.maxCacheSize(10000);
-        options = options.cacheDirectory(Paths.get("E:"));
+        options = options.cacheDirectory(Paths.get("E:/"));
         options = options.numIoThreads(Runtime.getRuntime().availableProcessors());
     }
 

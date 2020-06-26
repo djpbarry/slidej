@@ -15,10 +15,8 @@ import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.algorithm.gauss3.Gauss3;
 import net.imglib2.cache.img.DiskCachedCellImgFactory;
-import net.imglib2.cache.img.DiskCachedCellImgOptions;
 import net.imglib2.img.Img;
 import net.imglib2.img.ImgFactory;
-import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.NumericType;
@@ -219,7 +217,7 @@ public class SlideJ {
     }
 
     public <T extends NumericType<T> & NativeType<T>> void showImage(RandomAccessibleInterval<T> img) {
-        ImageJFunctions.show(img);
+       // ImageJFunctions.show(img);
     }
 
     private <T extends RealType<T> & NativeType<T>> void saveImage(String path, Img<T> img) {
