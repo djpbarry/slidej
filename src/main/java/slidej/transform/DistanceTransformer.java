@@ -2,20 +2,19 @@ package slidej.transform;
 
 import net.imagej.ImageJ;
 import net.imagej.ops.OpService;
-import net.imglib2.cache.img.DiskCachedCellImgFactory;
 import net.imglib2.img.Img;
 import net.imglib2.img.ImgFactory;
 import net.imglib2.img.ImgView;
+import net.imglib2.img.cell.CellImgFactory;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.real.FloatType;
 import slidej.binary.Inverter;
-import slidej.io.DiskCacheOptions;
 
 public class DistanceTransformer {
 
     public static Img<FloatType> calcDistanceMap(Img<BitType> binary, double[] cals, long[] dims, boolean inverted) {
         OpService os = (new ImageJ()).op();
-        ImgFactory<FloatType> factory = new DiskCachedCellImgFactory<>(new FloatType(), new DiskCacheOptions().getOptions());
+        ImgFactory<FloatType> factory = new CellImgFactory<>(new FloatType());
 
         if (!inverted) {
             return ImgView.wrap(os.image().distancetransform(binary, cals), factory);

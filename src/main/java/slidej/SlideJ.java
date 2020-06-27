@@ -11,21 +11,20 @@ import net.imagej.axis.AxisType;
 import net.imagej.axis.CalibratedAxis;
 import net.imagej.axis.DefaultAxisType;
 import net.imagej.axis.DefaultLinearAxis;
-import net.imglib2.RandomAccessible;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.algorithm.gauss3.Gauss3;
-import net.imglib2.cache.img.DiskCachedCellImgFactory;
 import net.imglib2.img.Img;
-import net.imglib2.img.ImgFactory;
+import net.imglib2.img.ImgView;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.util.Util;
+import net.imglib2.view.ExtendedRandomAccessibleInterval;
 import net.imglib2.view.Views;
 import org.apache.commons.io.FileUtils;
 import slidej.analysis.Analyser;
-import slidej.io.DiskCacheOptions;
 import slidej.io.ImageLoader;
 import slidej.properties.SlideJParams;
 import slidej.segmentation.ImageThresholder;
@@ -165,22 +164,20 @@ public class SlideJ {
         System.arraycopy(dims, 0, channelDims, 0, caxis);
         System.arraycopy(dims, caxis + 1, channelDims, caxis, channelDims.length - caxis);
 
-        ImgFactory<FloatType> factory = new DiskCachedCellImgFactory<>(new FloatType(), new DiskCacheOptions().getOptions());
-
         for (int c = 0; c < dims[caxis]; c++) {
             if (!Boolean.parseBoolean(props.getChannelProperty(SlideJParams.THRESHOLD_CHANNEL, c, SlideJParams.DEFAULT_THRESHOLD_CHANNEL)))
                 continue;
             System.out.println(String.format("Creating filtered image for channel %d.", c));
             System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
-            Img<FloatType> filtered = factory.create(channelDims);
-            RandomAccessible<T> channel = Views.extendValue(Views.hyperSlice(img, caxis, c), img.firstElement().createVariable());
+            RandomAccessibleInterval<T> channel = Views.hyperSlice(img, caxis, c);
+            ExtendedRandomAccessibleInterval extendedChannelView = Views.extendValue(channel, img.firstElement().createVariable());
             System.out.println(String.format("Filtering channel %d.", c));
             System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
-            Gauss3.gauss(getSigma(3, c, calibrations), channel, filtered);
+            Gauss3.gauss(getSigma(3, c, calibrations), extendedChannelView, channel);
             System.out.println(String.format("Filtering done."));
             System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
             System.out.println(String.format("Thresholding channel %d.", c));
-            Img<BitType> binary = thresholdImg(filtered,
+            Img<BitType> binary = thresholdImg(ImgView.wrap(channel, Util.getSuitableImgFactory(extendedChannelView.getSource(), channel.randomAccess().get())),
                     props.getChannelProperty(SlideJParams.THRESHOLD, c, SlideJParams.DEFAULT_THRESHOLD_METHOD));
             System.out.println(String.format("Thresholding done."));
             System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
@@ -196,7 +193,7 @@ public class SlideJ {
             System.out.println(String.format("Calculated."));
             System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
             System.out.println(String.format("Saving distance map 1 for channel %d.", c));
-            saveImage(String.format("%s%sdistanceMap_%d.tif", mapOutDir, File.separator, c),dm1);
+            saveImage(String.format("%s%sdistanceMap_%d.tif", mapOutDir, File.separator, c), dm1);
             System.out.println(String.format("Saved."));
             System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
             System.out.println(String.format("Calculating distance map 2 for channel %d.", c));
@@ -217,7 +214,7 @@ public class SlideJ {
     }
 
     public <T extends NumericType<T> & NativeType<T>> void showImage(RandomAccessibleInterval<T> img) {
-       // ImageJFunctions.show(img);
+        // ImageJFunctions.show(img);
     }
 
     private <T extends RealType<T> & NativeType<T>> void saveImage(String path, Img<T> img) {
