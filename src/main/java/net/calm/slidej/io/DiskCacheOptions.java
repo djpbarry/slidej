@@ -22,19 +22,32 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package slidej.binary;
+package net.calm.slidej.io;
 
-import net.imglib2.img.Img;
-import net.imglib2.loops.LoopBuilder;
-import net.imglib2.type.BooleanType;
+import net.imglib2.cache.img.DiskCachedCellImgOptions;
 
-public class Inverter {
+import java.nio.file.Paths;
 
-    public static <T extends BooleanType<T>> Img<T> invertImage(Img<T> input) {
-        Img<T> inverted = input.factory().create(input);
+public class DiskCacheOptions {
+    private DiskCachedCellImgOptions options;
 
-        LoopBuilder.setImages(input, inverted).forEachPixel((in, out) -> out.set(!in.get()));
+    public DiskCacheOptions() {
+        this.options = DiskCachedCellImgOptions.options();
+        setDefaults();
+    }
 
-        return inverted;
+    private void setDefaults() {
+        options = options.dirtyAccesses(false);
+        options = options.initializeCellsAsDirty(false);
+        options = options.volatileAccesses(false);
+        options = options.cacheType(DiskCachedCellImgOptions.CacheType.BOUNDED);
+        options = options.cellDimensions(100);
+        options=options.maxCacheSize(10000);
+        options = options.cacheDirectory(Paths.get("E:/"));
+        options = options.numIoThreads(Runtime.getRuntime().availableProcessors());
+    }
+
+    public DiskCachedCellImgOptions getOptions() {
+        return options;
     }
 }

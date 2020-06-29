@@ -22,7 +22,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package slidej.segmentation;
+package net.calm.slidej.segmentation;
 
 import net.imagej.ops.threshold.ThresholdNamespace;
 import net.imglib2.algorithm.stats.ComputeMinMax;

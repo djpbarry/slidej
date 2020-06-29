@@ -22,7 +22,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package slidej.analysis;
+package net.calm.slidej.analysis;
 
 import ij.measure.ResultsTable;
 import net.imglib2.Interval;

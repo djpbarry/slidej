@@ -25,7 +25,7 @@
 /**
  * 
  */
-package slidej.io;
+package net.calm.slidej.io;
 
 import io.scif.ImageMetadata;
 import io.scif.SCIFIO;

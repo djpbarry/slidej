@@ -22,27 +22,19 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package slidej.convert;
+package net.calm.slidej.binary;
 
 import net.imglib2.img.Img;
-import net.imglib2.img.cell.CellImgFactory;
 import net.imglib2.loops.LoopBuilder;
 import net.imglib2.type.BooleanType;
-import net.imglib2.type.NativeType;
-import net.imglib2.type.numeric.RealType;
 
-public class ConvertBinary {
-    public static <T extends BooleanType<T>, R extends RealType<R> & NativeType<R>> Img<R> convertBinary(Img<T> input, R type) {
-        Img<R> converted = (new CellImgFactory<>(type)).create(input);
+public class Inverter {
 
-        R max = type.createVariable();
-        R min = type.createVariable();
+    public static <T extends BooleanType<T>> Img<T> invertImage(Img<T> input) {
+        Img<T> inverted = input.factory().create(input);
 
-        max.setReal(type.getMaxValue());
-        min.setReal(type.getMinValue());
+        LoopBuilder.setImages(input, inverted).forEachPixel((in, out) -> out.set(!in.get()));
 
-        LoopBuilder.setImages(input, converted).multiThreaded().forEachPixel((in, out) -> out.set(in.get() ? max : min));
-
-        return converted;
+        return inverted;
     }
 }

@@ -22,11 +22,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package slidej;
+package net.calm.slidej;
 
 import TimeAndDate.TimeAndDate;
 import UtilClasses.GenUtils;
-import slidej.properties.SlideJParams;
+import net.calm.slidej.properties.SlideJParams;
 
 import java.io.File;
 

@@ -22,7 +22,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package slidej;
+package net.calm.slidej;
 
 import IO.PropertyWriter;
 import UtilClasses.GenUtils;
@@ -48,11 +48,11 @@ import net.imglib2.util.Util;
 import net.imglib2.view.ExtendedRandomAccessibleInterval;
 import net.imglib2.view.Views;
 import org.apache.commons.io.FileUtils;
-import slidej.analysis.Analyser;
-import slidej.io.ImageLoader;
-import slidej.properties.SlideJParams;
-import slidej.segmentation.ImageThresholder;
-import slidej.transform.DistanceTransformer;
+import net.calm.slidej.analysis.Analyser;
+import net.calm.slidej.io.ImageLoader;
+import net.calm.slidej.properties.SlideJParams;
+import net.calm.slidej.segmentation.ImageThresholder;
+import net.calm.slidej.transform.DistanceTransformer;
 
 import java.io.File;
 import java.io.IOException;

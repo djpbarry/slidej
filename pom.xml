@@ -102,7 +102,7 @@
 
     <properties>
         <package-name>net.calm.slidej</package-name>
-        <main-class>net.calm.slidej.Main</main-class>
+        <main-class>net.calm.net.calm.slidej.Main</main-class>
         <license.licenseName>bsd_2</license.licenseName>
         <license.copyrightOwners>Francis Crick Institute</license.copyrightOwners>
     </properties>

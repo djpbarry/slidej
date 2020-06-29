@@ -22,35 +22,27 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package slidej.transform;
+package net.calm.slidej.convert;
 
-import net.imagej.ImageJ;
-import net.imagej.ops.OpService;
 import net.imglib2.img.Img;
-import net.imglib2.img.ImgFactory;
-import net.imglib2.img.ImgView;
 import net.imglib2.img.cell.CellImgFactory;
-import net.imglib2.type.logic.BitType;
-import net.imglib2.type.numeric.real.FloatType;
-import slidej.binary.Inverter;
+import net.imglib2.loops.LoopBuilder;
+import net.imglib2.type.BooleanType;
+import net.imglib2.type.NativeType;
+import net.imglib2.type.numeric.RealType;
 
-public class DistanceTransformer {
+public class ConvertBinary {
+    public static <T extends BooleanType<T>, R extends RealType<R> & NativeType<R>> Img<R> convertBinary(Img<T> input, R type) {
+        Img<R> converted = (new CellImgFactory<>(type)).create(input);
 
-    public static Img<FloatType> calcDistanceMap(Img<BitType> binary, double[] cals, long[] dims, boolean inverted) {
-        OpService os = (new ImageJ()).op();
-        ImgFactory<FloatType> factory = new CellImgFactory<>(new FloatType());
+        R max = type.createVariable();
+        R min = type.createVariable();
 
-        if (!inverted) {
-            return ImgView.wrap(os.image().distancetransform(binary, cals), factory);
-        } else {
-            //RandomAccessibleInterval<BitType> invertedBinary = new CellImgFactory<>(new BitType()).create(dims);
-            //IterableInterval<BitType> invertedBinaryInterval = Views.iterable(invertedBinary);
-            //invertedBinaryInterval = os.image().invert(invertedBinaryInterval, Views.iterable(binary));
+        max.setReal(type.getMaxValue());
+        min.setReal(type.getMinValue());
 
-            Img<BitType> invertedBinary = Inverter.invertImage(binary);
+        LoopBuilder.setImages(input, converted).multiThreaded().forEachPixel((in, out) -> out.set(in.get() ? max : min));
 
-            return ImgView.wrap(os.image().distancetransform(invertedBinary, cals), factory);
-        }
+        return converted;
     }
-
 }
