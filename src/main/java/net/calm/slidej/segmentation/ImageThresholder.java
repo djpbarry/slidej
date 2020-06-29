@@ -24,7 +24,9 @@
 
 package net.calm.slidej.segmentation;
 
+import net.imagej.ImageJ;
 import net.imagej.ops.threshold.ThresholdNamespace;
+import net.imglib2.IterableInterval;
 import net.imglib2.algorithm.stats.ComputeMinMax;
 import net.imglib2.img.Img;
 import net.imglib2.img.cell.CellImgFactory;
@@ -54,10 +56,22 @@ public class ImageThresholder<T extends RealType<T> & NativeType<T>> {
         //hist.process();
         //int threshBin = (new AutoThresholder()).getThreshold(method, hist.getHistogram());
 
+        Method[] methods = ThresholdNamespace.class.getDeclaredMethods();
+        Method threshMethod = null;
+        for (Method m : methods) {
+            if (m.getName().equalsIgnoreCase(method) && m.getParameterCount() == 1 && m.getParameterTypes()[0].getName().equalsIgnoreCase(IterableInterval.class.getName())) {
+                threshMethod = m;
+            }
+        }
+
+        if (threshMethod == null) {
+            System.out.println(String.format("%s is not a valid threshold method.", method));
+            return;
+        }
+
         try {
-            Method threshMethod = ThresholdNamespace.class.getDeclaredMethod(method.toLowerCase());
-            output = (Img<BitType>) threshMethod.invoke(input);
-        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            output = (Img<BitType>) threshMethod.invoke((new ImageJ().op().threshold()), input);
+        } catch (IllegalAccessException | InvocationTargetException e) {
             System.out.println(String.format("Could not threshold image: %s", e.toString()));
         }
 

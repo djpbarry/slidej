@@ -24,8 +24,8 @@
 
 package net.calm.slidej;
 
-import TimeAndDate.TimeAndDate;
-import UtilClasses.GenUtils;
+import net.calm.iaclasslibrary.TimeAndDate.TimeAndDate;
+import net.calm.iaclasslibrary.UtilClasses.GenUtils;
 import net.calm.slidej.properties.SlideJParams;
 
 import java.io.File;

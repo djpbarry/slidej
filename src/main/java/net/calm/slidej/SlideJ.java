@@ -24,8 +24,9 @@
 
 package net.calm.slidej;
 
-import IO.PropertyWriter;
-import UtilClasses.GenUtils;
+import net.calm.iaclasslibrary.IO.DataWriter;
+import net.calm.iaclasslibrary.IO.PropertyWriter;
+import net.calm.iaclasslibrary.UtilClasses.GenUtils;
 import ij.measure.ResultsTable;
 import io.scif.ImageMetadata;
 import io.scif.config.SCIFIOConfig;
@@ -168,7 +169,7 @@ public class SlideJ {
             if (outputData.exists() && !outputData.delete())
                 throw new IOException("Cannot delete existing output file.");
             for (int i = 0; i < rt.length; i++) {
-                IO.DataWriter.saveResultsTable(rt[i], new File(file.getAbsolutePath() + "_results.csv"), true, i == 0);
+                DataWriter.saveResultsTable(rt[i], new File(file.getAbsolutePath() + "_results.csv"), true, i == 0);
             }
         } catch (IOException e) {
             GenUtils.logError(e, "Could not save results file.");
