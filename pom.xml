@@ -15,6 +15,98 @@
     <artifactId>slidej</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.1.2</version>
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>false</overWriteSnapshots>
+                            <overWriteIfNewer>true</overWriteIfNewer>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <name>SlideJ</name>
+    <description>Analysis of 3D slide data</description>
+    <url>https://github.com/djpbarry/slidej</url>
+    <inceptionYear>2020</inceptionYear>
+    <organization>
+        <name>Francis Crick Institute</name>
+        <url>https://www.crick.ac.uk/</url>
+    </organization>
+    <licenses>
+        <license>
+            <name>Simplified BSD License</name>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>djpbarry</id>
+            <name>David Barry</name>
+            <url>https://forum.image.sc/u/djpbarry</url>
+            <roles>
+                <role>lead</role>
+                <role>developer</role>
+                <role>debugger</role>
+                <role>reviewer</role>
+                <role>support</role>
+                <role>maintainer</role>
+            </roles>
+        </developer>
+    </developers>
+
+    <contributors>
+        <contributor>
+            <name>David Barry</name>
+            <roles><role>founder</role></roles>
+            <properties><id>djpbarry</id></properties>
+        </contributor>
+    </contributors>
+
+    <mailingLists>
+        <mailingList>
+            <name>Image.sc Forum</name>
+            <archive>https://forum.image.sc/u/djpbarry</archive>
+        </mailingList>
+    </mailingLists>
+
+    <scm>
+        <connection>scm:git:git://github.com/djpbarry/slidej</connection>
+        <developerConnection>scm:git:git@github.com:djpbarry/slidej</developerConnection>
+        <tag>HEAD</tag>
+        <url>https://github.com/github.com/djpbarry/slidej</url>
+    </scm>
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/djpbarry/slidej/issues</url>
+    </issueManagement>
+    <ciManagement>
+        <system>None</system>
+    </ciManagement>
+
+    <properties>
+        <package-name>net.calm.slidej</package-name>
+        <main-class>net.calm.slidej.Main</main-class>
+        <license.licenseName>bsd_2</license.licenseName>
+        <license.copyrightOwners>Francis Crick Institute</license.copyrightOwners>
+    </properties>
+
     <repositories>
         <!-- NB: for SciJava dependencies -->
         <repository>
