@@ -58,6 +58,7 @@ public class ImageLoader <T extends NumericType<T> & NativeType<T>> {
 	public Img<T> load(File file, int series) {
 		SCIFIOConfig config = new SCIFIOConfig();
 		config.imgOpenerSetIndex(series);
+		config.imgOpenerSetImgModes(SCIFIOConfig.ImgMode.CELL);
 
 		SCIFIOImgPlus<?> sciImg = new ImgOpener().openImgs(file.getAbsolutePath(), config).get(0);
 		this.meta = sciImg.getImageMetadata();

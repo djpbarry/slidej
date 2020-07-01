@@ -38,6 +38,8 @@ public class SlideJParams extends Properties {
     public static final String DEFAULT_THRESHOLD_METHOD = "Default";
     public static final String THRESHOLD_CHANNEL = "Segment";
     public static final String DEFAULT_THRESHOLD_CHANNEL = "true";
+    public static final int CELL_SIZE = 1000;
+    public static final String OUTPUT_FILE_EXT = ".ome.btf";
 
     public SlideJParams() {
 

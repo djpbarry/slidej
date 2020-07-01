@@ -24,6 +24,7 @@
 
 package net.calm.slidej.segmentation;
 
+import net.calm.slidej.properties.SlideJParams;
 import net.imagej.ImageJ;
 import net.imagej.ops.threshold.ThresholdNamespace;
 import net.imglib2.IterableInterval;
@@ -45,7 +46,7 @@ public class ImageThresholder<T extends RealType<T> & NativeType<T>> {
     public ImageThresholder(final Img<T> input, final String method) {
         this.input = input;
         this.method = method;
-        this.output = (new CellImgFactory<>(new BitType())).create(input);
+        this.output = (new CellImgFactory<>(new BitType(), SlideJParams.CELL_SIZE)).create(input);
     }
 
     public void threshold() {
@@ -59,7 +60,9 @@ public class ImageThresholder<T extends RealType<T> & NativeType<T>> {
         Method[] methods = ThresholdNamespace.class.getDeclaredMethods();
         Method threshMethod = null;
         for (Method m : methods) {
-            if (m.getName().equalsIgnoreCase(method) && m.getParameterCount() == 1 && m.getParameterTypes()[0].getName().equalsIgnoreCase(IterableInterval.class.getName())) {
+            if (m.getName().equalsIgnoreCase(method) && m.getParameterCount() == 2
+                    && m.getParameterTypes()[0].getName().equalsIgnoreCase(IterableInterval.class.getName())
+                    && m.getParameterTypes()[1].getName().equalsIgnoreCase(IterableInterval.class.getName())) {
                 threshMethod = m;
             }
         }
@@ -70,7 +73,7 @@ public class ImageThresholder<T extends RealType<T> & NativeType<T>> {
         }
 
         try {
-            output = (Img<BitType>) threshMethod.invoke((new ImageJ().op().threshold()), input);
+            output = (Img<BitType>) threshMethod.invoke((new ImageJ().op().threshold()), output, input);
         } catch (IllegalAccessException | InvocationTargetException e) {
             System.out.println(String.format("Could not threshold image: %s", e.toString()));
         }

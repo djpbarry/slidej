@@ -24,24 +24,25 @@
 
 package net.calm.slidej.transform;
 
+import net.calm.slidej.binary.Inverter;
+import net.calm.slidej.properties.SlideJParams;
 import net.imagej.ImageJ;
 import net.imagej.ops.OpService;
 import net.imglib2.img.Img;
-import net.imglib2.img.ImgFactory;
 import net.imglib2.img.ImgView;
 import net.imglib2.img.cell.CellImgFactory;
+import net.imglib2.type.NativeType;
 import net.imglib2.type.logic.BitType;
-import net.imglib2.type.numeric.real.FloatType;
-import net.calm.slidej.binary.Inverter;
+import net.imglib2.type.numeric.RealType;
 
 public class DistanceTransformer {
 
-    public static Img<FloatType> calcDistanceMap(Img<BitType> binary, double[] cals, long[] dims, boolean inverted) {
+    public static <T extends RealType<T> & NativeType<T>> Img<T> calcDistanceMap(Img<BitType> binary, T type, double[] cals, long[] dims, boolean inverted) {
         OpService os = (new ImageJ()).op();
-        ImgFactory<FloatType> factory = new CellImgFactory<>(new FloatType());
+        Img<T> output = (new CellImgFactory<>(type.createVariable(), SlideJParams.CELL_SIZE)).create(binary);
 
         if (!inverted) {
-            return ImgView.wrap(os.image().distancetransform(binary, cals), factory);
+            return ImgView.wrap(os.image().distancetransform(output, binary, cals), output.factory());
         } else {
             //RandomAccessibleInterval<BitType> invertedBinary = new CellImgFactory<>(new BitType()).create(dims);
             //IterableInterval<BitType> invertedBinaryInterval = Views.iterable(invertedBinary);
@@ -49,7 +50,7 @@ public class DistanceTransformer {
 
             Img<BitType> invertedBinary = Inverter.invertImage(binary);
 
-            return ImgView.wrap(os.image().distancetransform(invertedBinary, cals), factory);
+            return ImgView.wrap(os.image().distancetransform(output, invertedBinary, cals), output.factory());
         }
     }
 
