@@ -24,29 +24,31 @@
 
 package net.calm.slidej.segmentation;
 
-import net.calm.slidej.properties.SlideJParams;
+import net.calm.slidej.io.DiskCacheOptions;
 import net.imagej.ImageJ;
 import net.imagej.ops.threshold.ThresholdNamespace;
 import net.imglib2.IterableInterval;
 import net.imglib2.algorithm.stats.ComputeMinMax;
+import net.imglib2.cache.img.DiskCachedCellImgFactory;
+import net.imglib2.cache.img.DiskCachedCellImgOptions;
 import net.imglib2.img.Img;
-import net.imglib2.img.cell.CellImgFactory;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.RealType;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
 
 public class ImageThresholder<T extends RealType<T> & NativeType<T>> {
     private final Img<T> input;
     private final String method;
     private Img<BitType> output;
 
-    public ImageThresholder(final Img<T> input, final String method) {
+    public ImageThresholder(final Img<T> input, Path tmpDir, final String method) {
         this.input = input;
         this.method = method;
-        this.output = (new CellImgFactory<>(new BitType(), SlideJParams.CELL_SIZE)).create(input);
+        this.output = (new DiskCachedCellImgFactory<>(new BitType(), new DiskCacheOptions(tmpDir).getOptions())).create(input);
     }
 
     public void threshold() {

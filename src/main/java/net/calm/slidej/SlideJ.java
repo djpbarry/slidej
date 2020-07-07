@@ -32,6 +32,7 @@ import net.calm.iaclasslibrary.IO.DataWriter;
 import net.calm.iaclasslibrary.IO.PropertyWriter;
 import net.calm.iaclasslibrary.UtilClasses.GenUtils;
 import net.calm.slidej.analysis.Analyser;
+import net.calm.slidej.io.DiskCacheOptions;
 import net.calm.slidej.io.ImageLoader;
 import net.calm.slidej.properties.SlideJParams;
 import net.calm.slidej.segmentation.ImageThresholder;
@@ -42,12 +43,14 @@ import net.imagej.axis.DefaultAxisType;
 import net.imagej.axis.DefaultLinearAxis;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.algorithm.gauss3.Gauss3;
+import net.imglib2.cache.img.DiskCachedCellImgFactory;
 import net.imglib2.img.Img;
 import net.imglib2.img.ImgView;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Util;
 import net.imglib2.view.ExtendedRandomAccessibleInterval;
 import net.imglib2.view.Views;
@@ -56,6 +59,7 @@ import org.apache.commons.io.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,9 +67,10 @@ public class SlideJ {
 
     private final String BINARIES = "binaries";
     private final String AUX_INPUTS = "aux_inputs";
+    private final Path tmpDir;
     private final SlideJParams props;
 
-    public SlideJ(File propsLocation) {
+    public SlideJ(File propsLocation, Path tmpDir) {
         props = new SlideJParams();
         try {
             if (propsLocation != null) {
@@ -74,6 +79,7 @@ public class SlideJ {
         } catch (IOException | InterruptedException | InvocationTargetException e) {
             GenUtils.logError(e, "Failed to load properties file.");
         }
+        this.tmpDir = tmpDir;
     }
 
     public <T extends RealType<T> & NativeType<T>> void load(File file, int series, int neighbourhoodSize) {
@@ -141,15 +147,21 @@ public class SlideJ {
 
         System.out.println("Thresholding and generating distance maps...");
 
-        generateBinariesAndMaps(img,
-                binaryOutputs,
-                mapOutputs,
-                caxis, calibrations);
+//        generateBinariesAndMaps(img,
+//                binaryOutputs,
+//                mapOutputs,
+//                caxis, calibrations);
 
-        System.out.println("Loading distance maps...");
+        ArrayList<RandomAccessibleInterval<T>> distanceMaps = generateDistanceMaps(img, caxis, calibrations);
 
-        RandomAccessibleInterval<T> auxs = il.loadAndConcatenate(
-                new File(mapOutputs), caxis);
+        System.out.println("Concatenating distance maps...");
+
+//        RandomAccessibleInterval<T> auxs = il.loadAndConcatenate(
+//                new File(mapOutputs), caxis);
+
+        RandomAccessibleInterval<T> auxs = il.concatenate(
+                distanceMaps, caxis);
+
         Analyser<T> a = new Analyser<>(calNeighbourhood, dimLabels, calibrations);
 
         System.out.println("Loading aux channels and concatanating datset...");
@@ -217,29 +229,84 @@ public class SlideJ {
             long[] binDims = new long[binary.numDimensions()];
             binary.dimensions(binDims);
             System.out.println(String.format("Calculating distance map 1 for channel %d.", c));
-            Img<T> dm1 = DistanceTransformer.calcDistanceMap(binary, img.firstElement(), channelCals, binDims, false);
+            Img<T> dm1 = DistanceTransformer.calcDistanceMap(binary, img.firstElement(), channelCals, tmpDir, false);
             System.out.println("Img Type: " + dm1.getClass());
             System.out.println("Pixel Type: " + Util.getTypeFromInterval(dm1).getClass());
             System.out.println(String.format("Calculated."));
             System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
             System.out.println(String.format("Saving distance map 1 for channel %d.", c));
-            saveImage(String.format("%s%sdistanceMap_%d%s", mapOutDir, File.separator, c, SlideJParams.OUTPUT_FILE_EXT), dm1);
+//            saveImage(String.format("%s%sdistanceMap_%d%s", mapOutDir, File.separator, c, SlideJParams.OUTPUT_FILE_EXT), dm1);
             System.out.println(String.format("Saved."));
             System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
             System.out.println(String.format("Calculating distance map 2 for channel %d.", c));
-            Img<T> dm2 = DistanceTransformer.calcDistanceMap(binary, img.firstElement(), channelCals, binDims, true);
+            Img<T> dm2 = DistanceTransformer.calcDistanceMap(binary, img.firstElement(), channelCals, tmpDir, true);
             System.out.println("Img Type: " + dm2.getClass());
             System.out.println("Pixel Type: " + Util.getTypeFromInterval(dm2).getClass());
             System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
             System.out.println(String.format("Saving distance map 2 for channel %d.", c));
-            saveImage(String.format("%s%sinvertedDistanceMap_%d%s", mapOutDir, File.separator, c, SlideJParams.OUTPUT_FILE_EXT), dm2);
+//            saveImage(String.format("%s%sinvertedDistanceMap_%d%s", mapOutDir, File.separator, c, SlideJParams.OUTPUT_FILE_EXT), dm2);
             System.out.println(String.format("Saved."));
             System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
         }
     }
 
+    private <T extends RealType<T> & NativeType<T>> ArrayList<RandomAccessibleInterval<T>> generateDistanceMaps(Img<T> img, int caxis, double[] calibrations) {
+        long[] dims = new long[img.numDimensions()];
+        img.dimensions(dims);
+
+        double[] channelCals = new double[calibrations.length - 1];
+        System.arraycopy(calibrations, 0, channelCals, 0, caxis);
+        System.arraycopy(calibrations, caxis + 1, channelCals, caxis, channelCals.length - caxis);
+
+        ArrayList<RandomAccessibleInterval<T>> maps = new ArrayList<>();
+
+        for (int c = 0; c < dims[caxis]; c++) {
+            if (!Boolean.parseBoolean(props.getChannelProperty(SlideJParams.THRESHOLD_CHANNEL, c, SlideJParams.DEFAULT_THRESHOLD_CHANNEL)))
+                continue;
+            RandomAccessibleInterval<T> channel = Views.hyperSlice(img, caxis, c);
+            System.out.println("Channel Img Type: " + channel.getClass());
+            System.out.println("Pixel Type: " + Util.getTypeFromInterval(channel).getClass());
+            ExtendedRandomAccessibleInterval<T, RandomAccessibleInterval<T>> extendedChannelView = Views.extendValue(channel, img.firstElement().createVariable());
+            System.out.println("Extended Channel Img Type: " + extendedChannelView.getClass());
+            System.out.println(String.format("Filtering channel %d.", c));
+            System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
+            Img<FloatType> filtered = (new DiskCachedCellImgFactory<>(new FloatType(), new DiskCacheOptions(tmpDir).getOptions())).create(channel);
+            Gauss3.gauss(getSigma(channel.numDimensions(), c, calibrations), extendedChannelView, filtered);
+            System.out.println(String.format("Filtering done."));
+            System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
+            System.out.println(String.format("Thresholding channel %d.", c));
+            Img<BitType> binary = thresholdImg(filtered, props.getChannelProperty(SlideJParams.THRESHOLD, c, SlideJParams.DEFAULT_THRESHOLD_METHOD));
+            System.out.println("Img Type: " + binary.getClass());
+            System.out.println("Pixel Type: " + Util.getTypeFromInterval(binary).getClass());
+            System.out.println(String.format("Thresholding done."));
+            System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
+            long[] binDims = new long[binary.numDimensions()];
+            binary.dimensions(binDims);
+            System.out.println(String.format("Calculating distance map 1 for channel %d.", c));
+            Img<T> dm1 = DistanceTransformer.calcDistanceMap(binary, img.firstElement(), channelCals, tmpDir, false);
+            System.out.println("Img Type: " + dm1.getClass());
+            System.out.println("Pixel Type: " + Util.getTypeFromInterval(dm1).getClass());
+            maps.add(dm1);
+            System.out.println(String.format("Calculated."));
+            System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
+            System.out.println(String.format("Saving distance map 1 for channel %d.", c));
+            System.out.println(String.format("Saved."));
+            System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
+            System.out.println(String.format("Calculating distance map 2 for channel %d.", c));
+            Img<T> dm2 = DistanceTransformer.calcDistanceMap(binary, img.firstElement(), channelCals, tmpDir, true);
+            System.out.println("Img Type: " + dm2.getClass());
+            System.out.println("Pixel Type: " + Util.getTypeFromInterval(dm2).getClass());
+            System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
+            System.out.println(String.format("Saving distance map 2 for channel %d.", c));
+            System.out.println(String.format("Saved."));
+            System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
+            maps.add(dm2);
+        }
+        return maps;
+    }
+
     public <T extends RealType<T> & NativeType<T>> Img<BitType> thresholdImg(Img<T> img, String method) {
-        ImageThresholder<T> it = new ImageThresholder<>(img, method);
+        ImageThresholder<T> it = new ImageThresholder<>(img, tmpDir, method);
         it.threshold();
 
         return it.getOutput();

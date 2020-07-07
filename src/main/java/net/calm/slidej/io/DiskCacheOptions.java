@@ -26,25 +26,29 @@ package net.calm.slidej.io;
 
 import net.imglib2.cache.img.DiskCachedCellImgOptions;
 
-import java.nio.file.Paths;
+import java.nio.file.Path;
 
 public class DiskCacheOptions {
     private DiskCachedCellImgOptions options;
+    private Path tmpDir;
 
-    public DiskCacheOptions() {
+    public DiskCacheOptions(Path tmpDir) {
         this.options = DiskCachedCellImgOptions.options();
+        this.tmpDir = tmpDir;
         setDefaults();
     }
 
     private void setDefaults() {
-        options = options.dirtyAccesses(false);
-        options = options.initializeCellsAsDirty(false);
-        options = options.volatileAccesses(false);
-        options = options.cacheType(DiskCachedCellImgOptions.CacheType.BOUNDED);
-        options = options.cellDimensions(100);
-        options=options.maxCacheSize(10000);
-        options = options.cacheDirectory(Paths.get("E:/"));
-        options = options.numIoThreads(Runtime.getRuntime().availableProcessors());
+//        options = options.dirtyAccesses(false);
+  //      options = options.initializeCellsAsDirty(false);
+        //     options = options.volatileAccesses(false);
+        //options = options.cacheType(DiskCachedCellImgOptions.CacheType.BOUNDED);
+        options = options.cellDimensions(1000);
+        //options = options.maxCacheSize(10000);
+//        options = options.cacheDirectory(tmpDir);
+        options = options.tempDirectory(tmpDir);
+        //options = options.numIoThreads(Runtime.getRuntime().availableProcessors());
+        //options = options.deleteCacheDirectoryOnExit(false);
     }
 
     public DiskCachedCellImgOptions getOptions() {

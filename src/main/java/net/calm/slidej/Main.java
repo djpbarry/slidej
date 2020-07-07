@@ -29,6 +29,8 @@ import net.calm.iaclasslibrary.UtilClasses.GenUtils;
 import net.calm.slidej.properties.SlideJParams;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class Main {
 
@@ -41,6 +43,7 @@ public class Main {
 
         File file = null;
         File props = null;
+        Path tmpDir = null;
         int neighbourhoodSize = 50;
         int series = 0;
 
@@ -59,6 +62,9 @@ public class Main {
                     case "-p":
                         props = new File(args[i + 1]);
                         break;
+                    case "-t":
+                        tmpDir = Paths.get(args[i + 1]);
+                        break;
                     default:
 
                 }
@@ -74,7 +80,7 @@ public class Main {
 
         System.out.println(String.format("Input: %s", file.getAbsolutePath()));
 
-        SlideJ s = new SlideJ(props);
+        SlideJ s = new SlideJ(props, tmpDir);
 
         s.load(file, series, neighbourhoodSize);
 
