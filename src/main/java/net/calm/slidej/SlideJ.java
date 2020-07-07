@@ -37,6 +37,7 @@ import net.calm.slidej.io.ImageLoader;
 import net.calm.slidej.properties.SlideJParams;
 import net.calm.slidej.segmentation.ImageThresholder;
 import net.calm.slidej.transform.DistanceTransformer;
+import net.imagej.ImageJ;
 import net.imagej.axis.AxisType;
 import net.imagej.axis.CalibratedAxis;
 import net.imagej.axis.DefaultAxisType;
@@ -50,6 +51,7 @@ import net.imglib2.type.NativeType;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Util;
 import net.imglib2.view.ExtendedRandomAccessibleInterval;
@@ -152,7 +154,7 @@ public class SlideJ {
 //                mapOutputs,
 //                caxis, calibrations);
 
-        ArrayList<RandomAccessibleInterval<T>> distanceMaps = generateDistanceMaps(img, caxis, calibrations);
+        ArrayList<RandomAccessibleInterval<T>> distanceMaps = generateDistanceMaps(img, binaryOutputs, caxis, calibrations);
 
         System.out.println("Concatenating distance maps...");
 
@@ -250,7 +252,7 @@ public class SlideJ {
         }
     }
 
-    private <T extends RealType<T> & NativeType<T>> ArrayList<RandomAccessibleInterval<T>> generateDistanceMaps(Img<T> img, int caxis, double[] calibrations) {
+    private <T extends RealType<T> & NativeType<T>> ArrayList<RandomAccessibleInterval<T>> generateDistanceMaps(Img<T> img, String binOutDir, int caxis, double[] calibrations) {
         long[] dims = new long[img.numDimensions()];
         img.dimensions(dims);
 
@@ -279,6 +281,15 @@ public class SlideJ {
             System.out.println("Img Type: " + binary.getClass());
             System.out.println("Pixel Type: " + Util.getTypeFromInterval(binary).getClass());
             System.out.println(String.format("Thresholding done."));
+            System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
+            System.out.println(String.format("Converting thresholded image."));
+            Img<UnsignedByteType> convertedBinary = (new DiskCachedCellImgFactory<>(new UnsignedByteType(), new DiskCacheOptions(tmpDir).getOptions())).create(binary);
+            convertedBinary = (new ImageJ()).op().convert().uint8(convertedBinary, binary);
+            System.out.println("Img Type: " + convertedBinary.getClass());
+            System.out.println("Pixel Type: " + Util.getTypeFromInterval(convertedBinary).getClass());
+            System.out.println(String.format("Saving thresholded image for channel %d.", c));
+            saveImage(String.format("%S%Sthreshold_%d.ome.btf", binOutDir, File.separator, c), convertedBinary);
+            System.out.println(String.format("Saved."));
             System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
             long[] binDims = new long[binary.numDimensions()];
             binary.dimensions(binDims);
@@ -319,6 +330,7 @@ public class SlideJ {
     private <T extends RealType<T> & NativeType<T>> void saveImage(String path, Img<T> img) {
         SCIFIOConfig config = new SCIFIOConfig();
         config.writerSetCompression("LZW");
+
         (new ImgSaver()).saveImg(path, img, config);
     }
 
