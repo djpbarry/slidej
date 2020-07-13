@@ -30,7 +30,6 @@ import net.imagej.ops.threshold.ThresholdNamespace;
 import net.imglib2.IterableInterval;
 import net.imglib2.algorithm.stats.ComputeMinMax;
 import net.imglib2.cache.img.DiskCachedCellImgFactory;
-import net.imglib2.cache.img.DiskCachedCellImgOptions;
 import net.imglib2.img.Img;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.logic.BitType;

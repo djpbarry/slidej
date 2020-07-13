@@ -60,12 +60,12 @@ public class BigDataViewerExporter {
                 partitions.get(0),
                 0,
                 0,
-                new ExportMipmapInfo(new int[][]{{1, 1, 1}, {2, 2, 2}, {4, 4, 4}}, new int[][]{{16, 16, 16}, {16, 16, 16}, {8, 8, 8}}),
+                new ExportMipmapInfo(new int[][]{{1, 1, 1}, {2, 2, 2}, {4, 4, 4}, {8, 8, 8}}, new int[][]{{16, 16, 16}, {16, 16, 16}, {16, 16, 16}, {8, 8, 8}}),
                 true,
                 true,
                 null,
                 null,
-                Runtime.getRuntime().availableProcessors(),
+                Runtime.getRuntime().availableProcessors() - 1,
                 null);
     }
 

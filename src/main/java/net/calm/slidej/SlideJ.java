@@ -32,6 +32,7 @@ import net.calm.iaclasslibrary.IO.DataWriter;
 import net.calm.iaclasslibrary.IO.PropertyWriter;
 import net.calm.iaclasslibrary.UtilClasses.GenUtils;
 import net.calm.slidej.analysis.Analyser;
+import net.calm.slidej.convert.ConvertBinary;
 import net.calm.slidej.io.DiskCacheOptions;
 import net.calm.slidej.io.ImageLoader;
 import net.calm.slidej.properties.SlideJParams;
@@ -52,6 +53,7 @@ import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Util;
 import net.imglib2.view.ExtendedRandomAccessibleInterval;
@@ -154,7 +156,7 @@ public class SlideJ {
 //                mapOutputs,
 //                caxis, calibrations);
 
-        ArrayList<RandomAccessibleInterval<T>> distanceMaps = generateDistanceMaps(img, binaryOutputs, caxis, calibrations);
+        ArrayList<RandomAccessibleInterval<T>> distanceMaps = generateDistanceMaps(img, mapOutputs, binaryOutputs, caxis, calibrations);
 
         System.out.println("Concatenating distance maps...");
 
@@ -192,7 +194,7 @@ public class SlideJ {
         saveAnalysisParameters();
     }
 
-    public <T extends RealType<T> & NativeType<T>> void generateBinariesAndMaps(Img<T> img, String binOutDir, String mapOutDir, int caxis, double[] calibrations) {
+    public <T extends RealType<T> & NativeType<T>> void generateBinariesAndMaps(Img<T> img, String mapOutDir, int caxis, double[] calibrations) {
         long[] dims = new long[img.numDimensions()];
         img.dimensions(dims);
 
@@ -237,7 +239,7 @@ public class SlideJ {
             System.out.println(String.format("Calculated."));
             System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
             System.out.println(String.format("Saving distance map 1 for channel %d.", c));
-//            saveImage(String.format("%s%sdistanceMap_%d%s", mapOutDir, File.separator, c, SlideJParams.OUTPUT_FILE_EXT), dm1);
+            saveImage(String.format("%s%sdistanceMap_%d%s", mapOutDir, File.separator, c, SlideJParams.OUTPUT_FILE_EXT), dm1);
             System.out.println(String.format("Saved."));
             System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
             System.out.println(String.format("Calculating distance map 2 for channel %d.", c));
@@ -246,13 +248,13 @@ public class SlideJ {
             System.out.println("Pixel Type: " + Util.getTypeFromInterval(dm2).getClass());
             System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
             System.out.println(String.format("Saving distance map 2 for channel %d.", c));
-//            saveImage(String.format("%s%sinvertedDistanceMap_%d%s", mapOutDir, File.separator, c, SlideJParams.OUTPUT_FILE_EXT), dm2);
+            saveImage(String.format("%s%sinvertedDistanceMap_%d%s", mapOutDir, File.separator, c, SlideJParams.OUTPUT_FILE_EXT), dm2);
             System.out.println(String.format("Saved."));
             System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
         }
     }
 
-    private <T extends RealType<T> & NativeType<T>> ArrayList<RandomAccessibleInterval<T>> generateDistanceMaps(Img<T> img, String binOutDir, int caxis, double[] calibrations) {
+    private <T extends RealType<T> & NativeType<T>> ArrayList<RandomAccessibleInterval<T>> generateDistanceMaps(Img<T> img, String mapOutDir, String binOutDir, int caxis, double[] calibrations) {
         long[] dims = new long[img.numDimensions()];
         img.dimensions(dims);
 
@@ -278,37 +280,44 @@ public class SlideJ {
             System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
             System.out.println(String.format("Thresholding channel %d.", c));
             Img<BitType> binary = thresholdImg(filtered, props.getChannelProperty(SlideJParams.THRESHOLD, c, SlideJParams.DEFAULT_THRESHOLD_METHOD));
+            System.out.println(String.format("Thresholding done."));
             System.out.println("Img Type: " + binary.getClass());
             System.out.println("Pixel Type: " + Util.getTypeFromInterval(binary).getClass());
-            System.out.println(String.format("Thresholding done."));
             System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
             System.out.println(String.format("Converting thresholded image."));
             Img<UnsignedByteType> convertedBinary = (new DiskCachedCellImgFactory<>(new UnsignedByteType(), new DiskCacheOptions(tmpDir).getOptions())).create(binary);
             convertedBinary = (new ImageJ()).op().convert().uint8(convertedBinary, binary);
+            System.out.println(String.format("Conversion done."));
             System.out.println("Img Type: " + convertedBinary.getClass());
             System.out.println("Pixel Type: " + Util.getTypeFromInterval(convertedBinary).getClass());
-            System.out.println(String.format("Saving thresholded image for channel %d.", c));
-            saveImage(String.format("%S%Sthreshold_%d.ome.btf", binOutDir, File.separator, c), convertedBinary);
-            System.out.println(String.format("Saved."));
+            System.out.println(String.format("Saving converted thresholded image for channel %d.", c));
+            try {
+                saveImage(String.format("%S%Sthreshold_%d.ome.btf", binOutDir, File.separator, c), convertedBinary);
+                System.out.println(String.format("Saved."));
+            } catch (Exception e) {
+                System.out.println("Saving failed.");
+                System.out.println(e.toString());
+                System.out.println(e.getMessage());
+            }
             System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
-            long[] binDims = new long[binary.numDimensions()];
-            binary.dimensions(binDims);
             System.out.println(String.format("Calculating distance map 1 for channel %d.", c));
             Img<T> dm1 = DistanceTransformer.calcDistanceMap(binary, img.firstElement(), channelCals, tmpDir, false);
+            System.out.println(String.format("Done."));
             System.out.println("Img Type: " + dm1.getClass());
             System.out.println("Pixel Type: " + Util.getTypeFromInterval(dm1).getClass());
+//            System.out.println(String.format("Saving distance map 1 for channel %d.", c));
+//            saveImage(String.format("%s%sdistanceMap_%d%s", mapOutDir, File.separator, c, SlideJParams.OUTPUT_FILE_EXT), dm1);
+//            System.out.println(String.format("Saved."));
+            System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
             maps.add(dm1);
-            System.out.println(String.format("Calculated."));
-            System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
-            System.out.println(String.format("Saving distance map 1 for channel %d.", c));
-            System.out.println(String.format("Saved."));
-            System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
             System.out.println(String.format("Calculating distance map 2 for channel %d.", c));
             Img<T> dm2 = DistanceTransformer.calcDistanceMap(binary, img.firstElement(), channelCals, tmpDir, true);
+            System.out.println(String.format("Done."));
             System.out.println("Img Type: " + dm2.getClass());
             System.out.println("Pixel Type: " + Util.getTypeFromInterval(dm2).getClass());
             System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
             System.out.println(String.format("Saving distance map 2 for channel %d.", c));
+            saveImage(String.format("%s%sinvertedDistanceMap_%d%s", mapOutDir, File.separator, c, SlideJParams.OUTPUT_FILE_EXT), dm2);
             System.out.println(String.format("Saved."));
             System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
             maps.add(dm2);
@@ -330,6 +339,7 @@ public class SlideJ {
     private <T extends RealType<T> & NativeType<T>> void saveImage(String path, Img<T> img) {
         SCIFIOConfig config = new SCIFIOConfig();
         config.writerSetCompression("LZW");
+        config.parserSetSaveOriginalMetadata(true);
 
         (new ImgSaver()).saveImg(path, img, config);
     }

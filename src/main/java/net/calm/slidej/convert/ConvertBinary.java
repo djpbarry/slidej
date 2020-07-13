@@ -24,23 +24,26 @@
 
 package net.calm.slidej.convert;
 
-import net.calm.slidej.properties.SlideJParams;
+import net.calm.slidej.io.DiskCacheOptions;
+import net.imglib2.cache.img.DiskCachedCellImgFactory;
 import net.imglib2.img.Img;
-import net.imglib2.img.cell.CellImgFactory;
 import net.imglib2.loops.LoopBuilder;
 import net.imglib2.type.BooleanType;
-import net.imglib2.type.NativeType;
-import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.logic.BitType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
+
+import java.nio.file.Path;
 
 public class ConvertBinary {
-    public static <T extends BooleanType<T>, R extends RealType<R> & NativeType<R>> Img<R> convertBinary(Img<T> input, R type) {
-        Img<R> converted = (new CellImgFactory<>(type, SlideJParams.CELL_SIZE)).create(input);
+    public static <B extends BooleanType<B>> Img<UnsignedShortType> convertBinary(Img<B> input, Path tmpDir) {
 
-        R max = type.createVariable();
-        R min = type.createVariable();
+        Img<UnsignedShortType> converted = (new DiskCachedCellImgFactory<>(new UnsignedShortType(), new DiskCacheOptions(tmpDir).getOptions())).create(input);
 
-        max.setReal(type.getMaxValue());
-        min.setReal(type.getMinValue());
+        BitType a = new BitType();
+        BitType b = new BitType();
+
+        UnsignedShortType max = new UnsignedShortType(65535);
+        UnsignedShortType min = new UnsignedShortType(0);
 
         LoopBuilder.setImages(input, converted).multiThreaded().forEachPixel((in, out) -> out.set(in.get() ? max : min));
 
