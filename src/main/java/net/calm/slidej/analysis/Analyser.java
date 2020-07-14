@@ -28,13 +28,12 @@ import ij.measure.ResultsTable;
 import net.imglib2.Interval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.algorithm.util.Grids;
-import net.imglib2.type.NativeType;
-import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.util.Pair;
 
 import java.util.List;
 
-public class Analyser<T extends RealType<T> & NativeType<T>> {
+public class Analyser<T extends UnsignedShortType> {
     private final int[] neighbourhoodSize;
     private final String[] dimLabels;
     private final double[] calibrations;

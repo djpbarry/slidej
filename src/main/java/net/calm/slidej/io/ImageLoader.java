@@ -35,8 +35,7 @@ import io.scif.img.SCIFIOImgPlus;
 import io.scif.services.DatasetIOService;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
-import net.imglib2.type.NativeType;
-import net.imglib2.type.numeric.NumericType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.view.Views;
 
 import java.io.File;
@@ -47,7 +46,7 @@ import java.util.ArrayList;
  * @author david.barry@crick.ac.uk
  *
  */
-public class ImageLoader<T extends NumericType<T> & NativeType<T>> {
+public class ImageLoader<T extends UnsignedShortType> {
 
     private ImageMetadata meta;
 
@@ -63,7 +62,7 @@ public class ImageLoader<T extends NumericType<T> & NativeType<T>> {
         SCIFIOImgPlus<?> sciImg = new ImgOpener().openImgs(file.getAbsolutePath(), config).get(0);
         this.meta = sciImg.getImageMetadata();
 
-        return (Img<T>) sciImg;
+        return (Img<T>) sciImg.getImg();
     }
 
     public RandomAccessibleInterval<T> loadAndConcatenate(File dir, int concatAxis) {

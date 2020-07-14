@@ -31,18 +31,16 @@ import net.imagej.ops.OpService;
 import net.imglib2.algorithm.morphology.distance.DistanceTransform;
 import net.imglib2.cache.img.DiskCachedCellImgFactory;
 import net.imglib2.img.Img;
-import net.imglib2.img.ImgView;
-import net.imglib2.type.NativeType;
 import net.imglib2.type.logic.BitType;
-import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
 
 import java.nio.file.Path;
 
 public class DistanceTransformer {
 
-    public static <T extends RealType<T> & NativeType<T>> Img<T> calcDistanceMap(Img<BitType> binary, T type, double[] cals, Path tmpDir, boolean inverted) {
+    public static Img<UnsignedShortType> calcDistanceMap(Img<BitType> binary, double[] cals, Path tmpDir, boolean inverted) {
         OpService os = (new ImageJ()).op();
-        Img<T> output = (new DiskCachedCellImgFactory<>(type.createVariable(), new DiskCacheOptions(tmpDir).getOptions())).create(binary);
+        Img<UnsignedShortType> output = (new DiskCachedCellImgFactory<>(new UnsignedShortType(), new DiskCacheOptions(tmpDir).getOptions())).create(binary);
 
         if (!inverted) {
             //return ImgView.wrap(os.image().distancetransform(output, binary, cals), output.factory());

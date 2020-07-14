@@ -29,8 +29,7 @@ import net.imglib2.Cursor;
 import net.imglib2.Interval;
 import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.type.NativeType;
-import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.util.Pair;
 import net.imglib2.view.Views;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
@@ -40,7 +39,7 @@ import org.apache.commons.math3.stat.descriptive.summary.SumOfLogs;
 
 import java.util.List;
 
-class AnalyserThread<T extends RealType<T> & NativeType<T>> extends Thread {
+class AnalyserThread<T extends UnsignedShortType> extends Thread {
 
     private final ResultsTable rt;
     private final List<Pair<Interval, long[]>> cells;

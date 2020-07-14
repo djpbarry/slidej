@@ -101,10 +101,10 @@ public class ImgSaverTest {
 
     public static void main(String args[]) {
         System.out.println("Test 1.");
-        (new ImgSaverTest()).run("D:/Dropbox (The Francis Crick)/Debugging/TestIn/Test1.tif",2);
+        (new ImgSaverTest()).run("D:/Debugging/TestIn/slidejTest.lif_Region 2_Cropped.ome.tif",2);
 
-        System.out.println("Test 2.");
-        (new ImgSaverTest()).run("D:/Dropbox (The Francis Crick)/Debugging/TestIn/Test2.ome.btf",3);
-        System.exit(0);
+//        System.out.println("Test 2.");
+//        (new ImgSaverTest()).run("D:/Dropbox (The Francis Crick)/Debugging/TestIn/Test2.ome.btf",3);
+//        System.exit(0);
     }
 }
