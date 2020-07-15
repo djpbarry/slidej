@@ -24,73 +24,71 @@
 
 package net.calm.slidej.segmentation;
 
+import ij.process.AutoThresholder;
 import net.calm.slidej.io.DiskCacheOptions;
-import net.imagej.ImageJ;
-import net.imagej.ops.threshold.ThresholdNamespace;
-import net.imglib2.IterableInterval;
 import net.imglib2.algorithm.stats.ComputeMinMax;
+import net.imglib2.algorithm.stats.Histogram;
+import net.imglib2.algorithm.stats.RealBinMapper;
 import net.imglib2.cache.img.DiskCachedCellImgFactory;
 import net.imglib2.img.Img;
-import net.imglib2.type.NativeType;
+import net.imglib2.loops.LoopBuilder;
 import net.imglib2.type.logic.BitType;
-import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.nio.file.Path;
 
-public class ImageThresholder<T extends RealType<T> & NativeType<T>> {
-    private final Img<T> input;
+public class ImageThresholder {
+    private final Img<UnsignedShortType> input;
     private final String method;
     private Img<BitType> output;
 
-    public ImageThresholder(final Img<T> input, Path tmpDir, final String method) {
+    public ImageThresholder(final Img<UnsignedShortType> input, Path tmpDir, final String method) {
         this.input = input;
         this.method = method;
         this.output = (new DiskCachedCellImgFactory<>(new BitType(), new DiskCacheOptions(tmpDir).getOptions())).create(input);
     }
 
     public void threshold() {
-        T min = input.randomAccess().get();
-        T max = input.randomAccess().get();
+        UnsignedShortType min = new UnsignedShortType();
+        UnsignedShortType max = new UnsignedShortType();
         ComputeMinMax.computeMinMax(input, min, max);
-        //Histogram<T> hist = new Histogram<>(new RealBinMapper<>(min, max, 256), input.randomAccess());
-        //hist.process();
-        //int threshBin = (new AutoThresholder()).getThreshold(method, hist.getHistogram());
+        Histogram<UnsignedShortType> hist = new Histogram<>(new RealBinMapper<>(min, max, 256), input);
+        hist.process();
+        int threshBin = (new AutoThresholder()).getThreshold(method, hist.getHistogram());
 
-        Method[] methods = ThresholdNamespace.class.getDeclaredMethods();
-        Method threshMethod = null;
-        for (Method m : methods) {
-            if (m.getName().equalsIgnoreCase(method) && m.getParameterCount() == 2
-                    && m.getParameterTypes()[0].getName().equalsIgnoreCase(IterableInterval.class.getName())
-                    && m.getParameterTypes()[1].getName().equalsIgnoreCase(IterableInterval.class.getName())) {
-                threshMethod = m;
-            }
-        }
+//        Method[] methods = ThresholdNamespace.class.getDeclaredMethods();
+//        Method threshMethod = null;
+//        for (Method m : methods) {
+//            if (m.getName().equalsIgnoreCase(method) && m.getParameterCount() == 2
+//                    && m.getParameterTypes()[0].getName().equalsIgnoreCase(IterableInterval.class.getName())
+//                    && m.getParameterTypes()[1].getName().equalsIgnoreCase(IterableInterval.class.getName())) {
+//                threshMethod = m;
+//            }
+//        }
 
-        if (threshMethod == null) {
-            System.out.println(String.format("%s is not a valid threshold method.", method));
-            return;
-        }
+//        if (threshMethod == null) {
+//            System.out.println(String.format("%s is not a valid threshold method.", method));
+//            return;
+//        }
 
-        try {
-            output = (Img<BitType>) threshMethod.invoke((new ImageJ().op().threshold()), output, input);
-        } catch (IllegalAccessException | InvocationTargetException e) {
-            System.out.println(String.format("Could not threshold image: %s", e.toString()));
-        }
+//        try {
+//            output = (Img<BitType>) threshMethod.invoke((new ImageJ().op().threshold()), output, input);
+//        } catch (IllegalAccessException | InvocationTargetException e) {
+//            System.out.println(String.format("Could not threshold image: %s", e.toString()));
+//        }
 
-        //thresholdImage(hist.getBinCenter(threshBin));
+        thresholdImage(hist.getBinCenter(threshBin));
 
-        //output = Thresholder.threshold(input, hist.getBinCenter(threshBin), true, Runtime.getRuntime().availableProcessors());
+//        output = Thresholder.threshold(input, hist.getBinCenter(threshBin), true, Runtime.getRuntime().availableProcessors());
     }
 
-    private void thresholdImage(T threshold) {
+    private void thresholdImage(UnsignedShortType threshold) {
         BitType fg = new BitType();
         BitType bg = new BitType();
         fg.set(true);
         bg.set(false);
 
-        //LoopBuilder.setImages(input, output).multiThreaded().forEachPixel((in, out) -> out.set(in.getRealFloat() > threshold.getRealFloat() ? fg : bg));
+        LoopBuilder.setImages(input, output).multiThreaded().forEachPixel((in, out) -> out.set(in.get() > threshold.getInteger() ? fg : bg));
     }
 
     public Img<BitType> getOutput() {

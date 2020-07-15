@@ -32,16 +32,15 @@ import net.calm.iaclasslibrary.IO.DataWriter;
 import net.calm.iaclasslibrary.IO.PropertyWriter;
 import net.calm.iaclasslibrary.UtilClasses.GenUtils;
 import net.calm.slidej.analysis.Analyser;
+import net.calm.slidej.convert.ConvertBinary;
 import net.calm.slidej.io.ImageLoader;
 import net.calm.slidej.properties.SlideJParams;
 import net.calm.slidej.segmentation.ImageThresholder;
 import net.calm.slidej.transform.DistanceTransformer;
-import net.imagej.ImageJ;
 import net.imagej.axis.AxisType;
 import net.imagej.axis.CalibratedAxis;
 import net.imagej.axis.DefaultAxisType;
 import net.imagej.axis.DefaultLinearAxis;
-import net.imagej.ops.threshold.ThresholdNamespace;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.algorithm.gauss3.Gauss3;
 import net.imglib2.cache.img.DiskCachedCellImgFactory;
@@ -192,8 +191,6 @@ public class SlideJ {
         long[] dims = new long[img.numDimensions()];
         img.dimensions(dims);
 
-        ThresholdNamespace threshold = (new ImageJ()).op().threshold();
-
         ImgSaver saver = new ImgSaver();
         SCIFIOConfig config = new SCIFIOConfig();
         config.writerSetCompression("LZW");
@@ -207,18 +204,20 @@ public class SlideJ {
         for (int c = 0; c < dims[caxis]; c++) {
             if (!Boolean.parseBoolean(props.getChannelProperty(SlideJParams.THRESHOLD_CHANNEL, c, SlideJParams.DEFAULT_THRESHOLD_CHANNEL)))
                 continue;
+            System.out.println(String.format("Processing channel %d...", c));
             RandomAccessibleInterval<UnsignedShortType> channel = Views.hyperSlice(img, caxis, c);
 
+            System.out.println("Filtering...");
             Img<UnsignedShortType> filtered = (new DiskCachedCellImgFactory<>(new UnsignedShortType())).create(channel);
             Gauss3.gauss(getSigma(channel.numDimensions(), c, calibrations), Views.extendValue(channel, img.firstElement().createVariable()), filtered);
 
-//            Img<BitType> binary = thresholdImg(filtered, props.getChannelProperty(SlideJParams.THRESHOLD, c, SlideJParams.DEFAULT_THRESHOLD_METHOD));
-            Img<BitType> binary = (new DiskCachedCellImgFactory<>(new BitType())).create(filtered);
-            binary = (Img<BitType>) threshold.isoData(binary, filtered);
+            System.out.println("Thresholding...");
+            Img<BitType> binary = thresholdImg(filtered, props.getChannelProperty(SlideJParams.THRESHOLD, c, SlideJParams.DEFAULT_THRESHOLD_METHOD));
 
-            Img<UnsignedByteType> convertedBinary = (new DiskCachedCellImgFactory<>(new UnsignedByteType())).create(binary);
-            convertedBinary = (new ImageJ()).op().convert().uint8(convertedBinary, binary);
+            System.out.println("Converting binary image...");
+            Img<UnsignedByteType> convertedBinary = ConvertBinary.convertBinary(binary, tmpDir);
 
+            System.out.println("Saving...");
             try {
                 saver.saveImg(String.format("%S%Sthreshold_%d.ome.btf", binOutDir, File.separator, c), convertedBinary, config);
             } catch (Exception e) {
@@ -227,12 +226,15 @@ public class SlideJ {
                 System.out.println(e.getMessage());
             }
 
+            System.out.println("Calculating distance map 1...");
             Img<UnsignedShortType> dm1 = DistanceTransformer.calcDistanceMap(binary, channelCals, tmpDir, false);
 
             maps.add(dm1);
 
+            System.out.println("Calculating distance map 2...");
             Img<UnsignedShortType> dm2 = DistanceTransformer.calcDistanceMap(binary, channelCals, tmpDir, true);
 
+            System.out.println("Saving...");
             saver.saveImg(String.format("%s%sinvertedDistanceMap_%d%s", mapOutDir, File.separator, c, SlideJParams.OUTPUT_FILE_EXT), dm2, config);
 
             maps.add(dm2);
@@ -241,7 +243,7 @@ public class SlideJ {
     }
 
     public Img<BitType> thresholdImg(Img<UnsignedShortType> img, String method) {
-        ImageThresholder<UnsignedShortType> it = new ImageThresholder<>(img, tmpDir, method);
+        ImageThresholder it = new ImageThresholder(img, tmpDir, method);
         it.threshold();
 
         return it.getOutput();

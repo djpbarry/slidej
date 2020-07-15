@@ -30,20 +30,21 @@ import net.imglib2.img.Img;
 import net.imglib2.loops.LoopBuilder;
 import net.imglib2.type.BooleanType;
 import net.imglib2.type.logic.BitType;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 
 import java.nio.file.Path;
 
 public class ConvertBinary {
-    public static <B extends BooleanType<B>> Img<UnsignedShortType> convertBinary(Img<B> input, Path tmpDir) {
+    public static <B extends BooleanType<B>> Img<UnsignedByteType> convertBinary(Img<B> input, Path tmpDir) {
 
-        Img<UnsignedShortType> converted = (new DiskCachedCellImgFactory<>(new UnsignedShortType(), new DiskCacheOptions(tmpDir).getOptions())).create(input);
+        Img<UnsignedByteType> converted = (new DiskCachedCellImgFactory<>(new UnsignedByteType(), new DiskCacheOptions(tmpDir).getOptions())).create(input);
 
         BitType a = new BitType();
         BitType b = new BitType();
 
-        UnsignedShortType max = new UnsignedShortType(65535);
-        UnsignedShortType min = new UnsignedShortType(0);
+        UnsignedByteType max = new UnsignedByteType(255);
+        UnsignedByteType min = new UnsignedByteType(0);
 
         LoopBuilder.setImages(input, converted).multiThreaded().forEachPixel((in, out) -> out.set(in.get() ? max : min));
 
