@@ -25,6 +25,7 @@
 package net.calm.slidej;
 
 import ij.measure.ResultsTable;
+import ij.process.AutoThresholder;
 import io.scif.ImageMetadata;
 import io.scif.config.SCIFIOConfig;
 import io.scif.img.ImgSaver;
@@ -36,7 +37,6 @@ import net.calm.slidej.convert.ConvertBinary;
 import net.calm.slidej.io.ImageLoader;
 import net.calm.slidej.properties.SlideJParams;
 import net.calm.slidej.segmentation.ImageThresholder;
-import net.calm.slidej.transform.DistanceTransformer;
 import net.imagej.axis.AxisType;
 import net.imagej.axis.CalibratedAxis;
 import net.imagej.axis.DefaultAxisType;
@@ -138,7 +138,9 @@ public class SlideJ {
             props.setProperty(SlideJParams.OUTPUT, output);
             props.setProperty(SlideJParams.AUX_INPUT, mapOutputs);
             props.setProperty(SlideJParams.BIN_INPUT, binaryOutputs);
-        } catch (IndexOutOfBoundsException e) {
+
+            FileUtils.copyFile(file, new File(String.format("%S%Sthreshold_3.ome.btf", binaryOutputs, File.separator)));
+        } catch (IndexOutOfBoundsException | IOException e) {
             System.out.print("Failed to create output directories- aborting.");
         }
 
@@ -151,40 +153,40 @@ public class SlideJ {
 
         ArrayList<RandomAccessibleInterval<UnsignedShortType>> distanceMaps = generateDistanceMaps(img, mapOutputs, binaryOutputs, caxis, calibrations);
 
-        System.out.println("Concatenating distance maps...");
-
-//        RandomAccessibleInterval<T> auxs = il.loadAndConcatenate(
-//                new File(mapOutputs), caxis);
-
-        RandomAccessibleInterval<UnsignedShortType> auxs = il.concatenate(
-                distanceMaps, caxis);
-
-        Analyser<UnsignedShortType> a = new Analyser<>(calNeighbourhood, dimLabels, calibrations);
-
-        System.out.println("Loading aux channels and concatanating datset...");
-
-        RandomAccessibleInterval<UnsignedShortType> concat = Views.concatenate(caxis, img, auxs);
-
-        System.out.println("Done.");
-        System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
-        System.out.println("Analysing intensities in all channels...");
-
-        a.analyse(concat);
-
-        System.out.println("Saving results...");
-
-        try {
-            ResultsTable[] rt = a.getRt();
-            File outputData = new File(file.getAbsolutePath() + "_results.csv");
-            if (outputData.exists() && !outputData.delete())
-                throw new IOException("Cannot delete existing output file.");
-            for (int i = 0; i < rt.length; i++) {
-                DataWriter.saveResultsTable(rt[i], new File(file.getAbsolutePath() + "_results.csv"), true, i == 0);
-            }
-        } catch (IOException e) {
-            GenUtils.logError(e, "Could not save results file.");
-        }
-        saveAnalysisParameters();
+//        System.out.println("Concatenating distance maps...");
+//
+////        RandomAccessibleInterval<T> auxs = il.loadAndConcatenate(
+////                new File(mapOutputs), caxis);
+//
+//        RandomAccessibleInterval<UnsignedShortType> auxs = il.concatenate(
+//                distanceMaps, caxis);
+//
+//        Analyser<UnsignedShortType> a = new Analyser<>(calNeighbourhood, dimLabels, calibrations);
+//
+//        System.out.println("Loading aux channels and concatanating datset...");
+//
+//        RandomAccessibleInterval<UnsignedShortType> concat = Views.concatenate(caxis, img, auxs);
+//
+//        System.out.println("Done.");
+//        System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
+//        System.out.println("Analysing intensities in all channels...");
+//
+//        a.analyse(concat);
+//
+//        System.out.println("Saving results...");
+//
+//        try {
+//            ResultsTable[] rt = a.getRt();
+//            File outputData = new File(file.getAbsolutePath() + "_results.csv");
+//            if (outputData.exists() && !outputData.delete())
+//                throw new IOException("Cannot delete existing output file.");
+//            for (int i = 0; i < rt.length; i++) {
+//                DataWriter.saveResultsTable(rt[i], new File(file.getAbsolutePath() + "_results.csv"), true, i == 0);
+//            }
+//        } catch (IOException e) {
+//            GenUtils.logError(e, "Could not save results file.");
+//        }
+//        saveAnalysisParameters();
     }
 
     private ArrayList<RandomAccessibleInterval<UnsignedShortType>> generateDistanceMaps(Img<UnsignedShortType> img, String mapOutDir, String binOutDir, int caxis, double[] calibrations) {
@@ -211,33 +213,38 @@ public class SlideJ {
             Img<UnsignedShortType> filtered = (new DiskCachedCellImgFactory<>(new UnsignedShortType())).create(channel);
             Gauss3.gauss(getSigma(channel.numDimensions(), c, calibrations), Views.extendValue(channel, img.firstElement().createVariable()), filtered);
 
-            System.out.println("Thresholding...");
-            Img<BitType> binary = thresholdImg(filtered, props.getChannelProperty(SlideJParams.THRESHOLD, c, SlideJParams.DEFAULT_THRESHOLD_METHOD));
+//            OpService opService = new ImageJ().op();
 
-            System.out.println("Converting binary image...");
-            Img<UnsignedByteType> convertedBinary = ConvertBinary.convertBinary(binary, tmpDir);
+            String[] methods = AutoThresholder.getMethods();
+            for (String method : methods) {
 
-            System.out.println("Saving...");
-            try {
-                saver.saveImg(String.format("%S%Sthreshold_%d.ome.btf", binOutDir, File.separator, c), convertedBinary, config);
-            } catch (Exception e) {
-                System.out.println("Saving failed.");
-                System.out.println(e.toString());
-                System.out.println(e.getMessage());
+                System.out.println("Thresholding...");
+                Img<BitType> binary = thresholdImg(filtered, props.getChannelProperty(method, c, SlideJParams.DEFAULT_THRESHOLD_METHOD));
+
+                System.out.println("Converting binary image...");
+                Img<UnsignedByteType> convertedBinary = ConvertBinary.convertBinary(binary, tmpDir);
+
+                System.out.println("Saving...");
+                try {
+                    saver.saveImg(String.format("%S%S%sthreshold_%d.ome.btf", binOutDir, File.separator, method, c), convertedBinary, config);
+                } catch (Exception e) {
+                    System.out.println("Saving failed.");
+                    System.out.println(e.toString());
+                    System.out.println(e.getMessage());
+                }
+
+//                System.out.println("Calculating distance map 1...");
+//                Img<UnsignedShortType> dm1 = DistanceTransformer.calcDistanceMap(binary, channelCals, tmpDir, false);
+
+//                maps.add(dm1);
+
+//                System.out.println("Calculating distance map 2...");
+//                Img<UnsignedShortType> dm2 = DistanceTransformer.calcDistanceMap(binary, channelCals, tmpDir, true);
+//
+//                System.out.println("Saving...");
+//                saver.saveImg(String.format("%s%s%s_distanceMap_%d%s", mapOutDir, File.separator,method, c, SlideJParams.OUTPUT_FILE_EXT), dm2, config);
             }
-
-            System.out.println("Calculating distance map 1...");
-            Img<UnsignedShortType> dm1 = DistanceTransformer.calcDistanceMap(binary, channelCals, tmpDir, false);
-
-            maps.add(dm1);
-
-            System.out.println("Calculating distance map 2...");
-            Img<UnsignedShortType> dm2 = DistanceTransformer.calcDistanceMap(binary, channelCals, tmpDir, true);
-
-            System.out.println("Saving...");
-            saver.saveImg(String.format("%s%sinvertedDistanceMap_%d%s", mapOutDir, File.separator, c, SlideJParams.OUTPUT_FILE_EXT), dm2, config);
-
-            maps.add(dm2);
+//            maps.add(dm2);
         }
         return maps;
     }
