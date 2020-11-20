@@ -42,8 +42,16 @@ public class SlideJParams extends Properties {
     public static final String THRESHOLD_CHANNEL = "Segment";
     public static final String DEFAULT_THRESHOLD_CHANNEL = "true";
     public static final String DEFAULT_TH_CHANNEL = "false";
+    public static final String COLOC = "Colocalise";
+    public static final String DO_3D = "3D Analysis";
+    public static final String NEIGHBOURHOOD = "Neighbourhood size";
     public static final int CELL_SIZE = 1000;
     public static final String OUTPUT_FILE_EXT = ".ome.btf";
+    public static final int X_AXIS = 0;
+    public static final int Y_AXIS = 1;
+    public static final int Z_AXIS = 2;
+    public static final int C_AXIS = 3;
+    public static final int N_AXIS = 4;
 
     public SlideJParams() {
 

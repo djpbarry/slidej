@@ -30,6 +30,7 @@ import io.scif.config.SCIFIOConfig;
 import io.scif.img.ImgSaver;
 import net.calm.iaclasslibrary.IO.DataWriter;
 import net.calm.iaclasslibrary.IO.PropertyWriter;
+import net.calm.iaclasslibrary.TimeAndDate.TimeAndDate;
 import net.calm.iaclasslibrary.UtilClasses.GenUtils;
 import net.calm.slidej.analysis.Analyser;
 import net.calm.slidej.io.ImageLoader;
@@ -49,7 +50,9 @@ import net.imglib2.img.Img;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.NumericType;
+import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
+import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Util;
 import net.imglib2.view.Views;
 import org.apache.commons.io.FileUtils;
@@ -59,6 +62,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class SlideJ {
@@ -84,6 +88,7 @@ public class SlideJ {
         System.out.println(String.format("%d processors available.", Runtime.getRuntime().availableProcessors()));
 
         props.setProperty(SlideJParams.RAW_INPUT, file.getParent());
+        props.setProperty(SlideJParams.NEIGHBOURHOOD, String.valueOf(neighbourhoodSize));
 
         System.out.println(String.format("Loading %s", file.getAbsolutePath()));
         System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
@@ -103,7 +108,8 @@ public class SlideJ {
 
         int[] calNeighbourhood = new int[img.numDimensions()];
         double[] calibrations = new double[img.numDimensions()];
-        int caxis = -1;
+        int[] axisOrder = new int[SlideJParams.N_AXIS];
+        Arrays.fill(axisOrder, -1);
         String[] dimLabels = new String[img.numDimensions()];
 
         for (int i = 0; i < calNeighbourhood.length; i++) {
@@ -117,12 +123,20 @@ public class SlideJ {
                 dimLabels[i] = type.getLabel();
             }
             if (dimLabels[i].equalsIgnoreCase("Channel")) {
-                caxis = i;
+                axisOrder[SlideJParams.C_AXIS] = i;
+            } else if (dimLabels[i].equalsIgnoreCase("Z")) {
+                axisOrder[SlideJParams.Z_AXIS] = i;
+            } else if (dimLabels[i].equalsIgnoreCase("X")) {
+                axisOrder[SlideJParams.X_AXIS] = i;
+            } else if (dimLabels[i].equalsIgnoreCase("Y")) {
+                axisOrder[SlideJParams.Y_AXIS] = i;
             }
         }
 
-        calNeighbourhood[caxis] = 1;
-        calibrations[caxis] = 2;
+        calNeighbourhood[axisOrder[SlideJParams.C_AXIS]] = 1;
+        if (!Boolean.parseBoolean(props.getProperty(SlideJParams.DO_3D)))
+            calNeighbourhood[axisOrder[SlideJParams.Z_AXIS]] = 1;
+        calibrations[axisOrder[SlideJParams.C_AXIS]] = 2;
 
         System.out.println("Creating output directories...");
 
@@ -131,7 +145,7 @@ public class SlideJ {
         String mapOutputs = null;
 
         try {
-            output = makeOutputDirectories(new File(file.getParent()), String.format("%s_output", file.getName())).get(0);
+            output = makeOutputDirectories(new File(file.getParent()), String.format("%s_SlideJ_%s", file.getName(), TimeAndDate.getCurrentTimeAndDate().replace('/', '-').replace(':','-'))).get(0);
             ArrayList<String> children = makeOutputDirectories(new File(output), BINARIES, AUX_INPUTS);
             binaryOutputs = children.get(0);
             mapOutputs = children.get(1);
@@ -151,7 +165,7 @@ public class SlideJ {
 //                mapOutputs,
 //                caxis, calibrations);
 
-        ArrayList<RandomAccessibleInterval<UnsignedShortType>> distanceMaps = generateDistanceMaps(img, mapOutputs, binaryOutputs, caxis, calibrations);
+        ArrayList<RandomAccessibleInterval<UnsignedShortType>> distanceMaps = generateDistanceMaps(img, mapOutputs, binaryOutputs, axisOrder[SlideJParams.C_AXIS], calibrations);
 
         System.out.println("Concatenating distance maps...");
 //
@@ -159,13 +173,13 @@ public class SlideJ {
 ////                new File(mapOutputs), caxis);
 
         RandomAccessibleInterval<UnsignedShortType> auxs = il.concatenate(
-                distanceMaps, caxis);
+                distanceMaps, axisOrder[SlideJParams.C_AXIS]);
 
-        Analyser<UnsignedShortType> a = new Analyser<>(calNeighbourhood, dimLabels, calibrations);
+        Analyser<UnsignedShortType> a = new Analyser<>(calNeighbourhood, dimLabels, calibrations, axisOrder, Boolean.parseBoolean(props.getProperty(SlideJParams.COLOC)));
 
 //        System.out.println("Loading aux channels and concatanating datset...");
 
-        RandomAccessibleInterval<UnsignedShortType> concat = Views.concatenate(caxis, img, auxs);
+        RandomAccessibleInterval<UnsignedShortType> concat = Views.concatenate(axisOrder[SlideJParams.C_AXIS], img, auxs);
 
         System.out.println("Done.");
         System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
@@ -186,6 +200,21 @@ public class SlideJ {
         } catch (IOException e) {
             GenUtils.logError(e, "Could not save results file.");
         }
+
+        if (Boolean.parseBoolean(props.getProperty(SlideJParams.COLOC))) {
+
+            Img<FloatType>[][] outputs = a.getOutputs();
+
+            int index = 0;
+            for (int chan = 0; chan < img.dimension(axisOrder[SlideJParams.C_AXIS]) - 1; chan++) {
+                for (int chan2 = chan + 1; chan2 < img.dimension(axisOrder[SlideJParams.C_AXIS]); chan2++) {
+                    saveImage(String.format("%s%sPC_%d_%d.ome.tiff", props.getProperty(SlideJParams.OUTPUT), File.separator, chan, chan2), outputs[0][index]);
+                    saveImage(String.format("%s%sSC_%d_%d.ome.tiff", props.getProperty(SlideJParams.OUTPUT), File.separator, chan, chan2), outputs[1][index]);
+                    index++;
+                }
+            }
+        }
+
         saveAnalysisParameters();
     }
 
@@ -270,10 +299,10 @@ public class SlideJ {
         // ImageJFunctions.show(img);
     }
 
-    private void saveImage(String path, Img<UnsignedShortType> img) {
+    private <T extends RealType> void saveImage(String path, Img<T> img) {
         SCIFIOConfig config = new SCIFIOConfig();
         config.writerSetCompression("LZW");
-        config.parserSetSaveOriginalMetadata(true);
+        //config.parserSetSaveOriginalMetadata(true);
 
         (new ImgSaver()).saveImg(path, img, config);
     }
@@ -282,7 +311,8 @@ public class SlideJ {
         ArrayList<String> output = new ArrayList<>();
         for (String path : children) {
             String fullPath = String.format("%s%s%s", parent.getAbsolutePath(), File.separator, path);
-            if (makeOutputDirectory(String.format("%s%s%s", parent.getAbsolutePath(), File.separator, path))) {
+            fullPath = GenUtils.openResultsDirectory(fullPath);
+            if (fullPath != null) {
                 output.add(fullPath);
             }
         }
@@ -291,6 +321,7 @@ public class SlideJ {
 
     private boolean makeOutputDirectory(String path) {
         File dir = new File(path);
+        GenUtils.openResultsDirectory(path);
         try {
             if (dir.exists()) {
                 FileUtils.cleanDirectory(dir);

@@ -25,11 +25,12 @@
 package net.calm.slidej.analysis;
 
 import ij.measure.ResultsTable;
+import net.imagej.ops.stats.StatsNamespace;
 import net.imglib2.Cursor;
 import net.imglib2.Interval;
 import net.imglib2.IterableInterval;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.type.numeric.integer.UnsignedShortType;
+import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.Pair;
 import net.imglib2.view.Views;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
@@ -39,7 +40,7 @@ import org.apache.commons.math3.stat.descriptive.summary.SumOfLogs;
 
 import java.util.List;
 
-class AnalyserThread<T extends UnsignedShortType> extends Thread {
+class AnalyserThread<T extends RealType<T>> extends Thread {
 
     private final ResultsTable rt;
     private final List<Pair<Interval, long[]>> cells;
@@ -47,16 +48,18 @@ class AnalyserThread<T extends UnsignedShortType> extends Thread {
     private final int[] neighbourhoodSize;
     private final String[] dimLabels;
     private final double[] calibrations;
+    private final StatsNamespace statSpace;
 
     public AnalyserThread(final List<Pair<Interval, long[]>> cells, final RandomAccessibleInterval<T> img,
                           final int[] neighbourhoodSize, final ResultsTable rt, final String[] dimLabels,
-                          final double[] calibrations) {
+                          final double[] calibrations, StatsNamespace statSpace) {
         this.rt = rt;
         this.cells = cells;
         this.img = img;
         this.neighbourhoodSize = neighbourhoodSize;
         this.dimLabels = dimLabels;
         this.calibrations = calibrations;
+        this.statSpace = statSpace;
     }
 
     public void run() {
@@ -89,8 +92,19 @@ class AnalyserThread<T extends UnsignedShortType> extends Thread {
             rt.setValue("Sum Squared", resultsRow, stats.getSumsq());
             rt.setValue("Variance", resultsRow, stats.getVariance());
             rt.setValue("Product", resultsRow, (new Product()).evaluate(stats.getValues()));
-            rt.setValue("Sum of Logs", resultsRow, (new SumOfLogs()).evaluate(stats.getValues()));
+//            rt.setValue("Sum of Logs", resultsRow, (new SumOfLogs()).evaluate(stats.getValues()));
             rt.setValue("Second Moment", resultsRow, (new SecondMoment()).evaluate(stats.getValues()));
+            rt.setValue("ImageJ Geometric Mean", resultsRow, statSpace.geometricMean(view).getRealDouble());
+            rt.setValue("ImageJ Harmonic Mean", resultsRow, statSpace.harmonicMean(view).getRealDouble());
+            rt.setValue("ImageJ Kurtosis", resultsRow, statSpace.kurtosis(view).getRealDouble());
+            rt.setValue("ImageJ Moment 1 About Mean", resultsRow, statSpace.moment1AboutMean(view).getRealDouble());
+            rt.setValue("ImageJ Moment 2 About Mean", resultsRow, statSpace.moment2AboutMean(view).getRealDouble());
+            rt.setValue("ImageJ Moment 3 About Mean", resultsRow, statSpace.moment3AboutMean(view).getRealDouble());
+            rt.setValue("ImageJ Moment 4 About Mean", resultsRow, statSpace.moment4AboutMean(view).getRealDouble());
+            rt.setValue("ImageJ Skewness", resultsRow, statSpace.skewness(view).getRealDouble());
+//            rt.setValue("ImageJ Sum of Inverses", resultsRow, statSpace.sumOfInverses(view).getRealDouble());
+            rt.setValue("ImageJ Sum of Squares", resultsRow, statSpace.sumOfSquares(view).getRealDouble());
+
             resultsRow++;
         }
     }

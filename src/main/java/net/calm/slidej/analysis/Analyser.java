@@ -25,24 +25,36 @@
 package net.calm.slidej.analysis;
 
 import ij.measure.ResultsTable;
+import net.calm.slidej.properties.SlideJParams;
+import net.imagej.ImageJ;
+import net.imagej.ops.stats.StatsNamespace;
 import net.imglib2.Interval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.algorithm.util.Grids;
-import net.imglib2.type.numeric.integer.UnsignedShortType;
+import net.imglib2.img.Img;
+import net.imglib2.img.ImgFactory;
+import net.imglib2.img.cell.CellImgFactory;
+import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Pair;
 
 import java.util.List;
 
-public class Analyser<T extends UnsignedShortType> {
+public class Analyser<T extends RealType<T>> {
     private final int[] neighbourhoodSize;
     private final String[] dimLabels;
     private final double[] calibrations;
     private ResultsTable[] rt;
+    private final int[] dimOrder;
+    private Img<FloatType>[][] outputs;
+    private final boolean coloc;
 
-    public Analyser(int[] neighbourhoodSize, String[] dimLabels, double[] calibrations) {
+    public Analyser(int[] neighbourhoodSize, String[] dimLabels, double[] calibrations, int[] dimOrder, boolean coloc) {
         this.neighbourhoodSize = neighbourhoodSize;
         this.dimLabels = dimLabels;
         this.calibrations = calibrations;
+        this.dimOrder = dimOrder;
+        this.coloc = coloc;
     }
 
     public void analyse(RandomAccessibleInterval<T> img) {
@@ -51,21 +63,42 @@ public class Analyser<T extends UnsignedShortType> {
 
         img.dimensions(dims);
 
+        if (coloc) {
+
+            final ImgFactory<FloatType> imgFactory = new CellImgFactory<>(new FloatType());
+
+            outputs = new Img[2][(((int) dims[dimOrder[SlideJParams.C_AXIS]] - 1) * (int) dims[dimOrder[SlideJParams.C_AXIS]]) / 2];
+
+            for (int i = 0; i < outputs.length; i++) {
+                for (int j = 0; j < outputs[i].length; j++) {
+                    outputs[i][j] = imgFactory.create((int) Math.ceil((float) dims[dimOrder[SlideJParams.X_AXIS]] / neighbourhoodSize[dimOrder[SlideJParams.X_AXIS]]),
+                            (int) Math.ceil((float) dims[dimOrder[SlideJParams.Y_AXIS]] / neighbourhoodSize[dimOrder[SlideJParams.Y_AXIS]]),
+                            (int) Math.ceil((float) dims[dimOrder[SlideJParams.Z_AXIS]] / neighbourhoodSize[dimOrder[SlideJParams.Z_AXIS]]));
+                }
+            }
+        }
+
         List<Pair<Interval, long[]>> cells = Grids.collectAllContainedIntervalsWithGridPositions(dims, neighbourhoodSize);
 
         int nbCPUs = Runtime.getRuntime().availableProcessors();
 
         rt = new ResultsTable[nbCPUs];
 
-        AnalyserThread<T>[] ats = new AnalyserThread[nbCPUs];
+        Thread[] ats = new Thread[nbCPUs];
 
         int nCellsPerThread = (int) Math.ceil((float) cells.size() / nbCPUs);
+        StatsNamespace stats = new ImageJ().op().stats();
         for (int thread = 0; thread < nbCPUs; thread++) {
             rt[thread] = new ResultsTable();
             int startIndex = thread * nCellsPerThread;
             int endIndex = Math.min(startIndex + nCellsPerThread, cells.size());
-            ats[thread] = new AnalyserThread<T>(cells.subList(startIndex, endIndex), img, neighbourhoodSize,
-                    rt[thread], dimLabels, calibrations);
+            if (!coloc) {
+                ats[thread] = new AnalyserThread<T>(cells.subList(startIndex, endIndex), img, neighbourhoodSize,
+                        rt[thread], dimLabels, calibrations, stats);
+            } else {
+                ats[thread] = new CorrelationThread<T>(cells.subList(startIndex, endIndex), img, neighbourhoodSize,
+                        rt[thread], dimLabels, calibrations, dimOrder, outputs);
+            }
             ats[thread].start();
         }
         try {
@@ -84,5 +117,9 @@ public class Analyser<T extends UnsignedShortType> {
 
     public ResultsTable[] getRt() {
         return rt;
+    }
+
+    public Img<FloatType>[][] getOutputs() {
+        return outputs;
     }
 }
