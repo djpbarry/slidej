@@ -32,6 +32,7 @@ import net.calm.iaclasslibrary.IO.DataWriter;
 import net.calm.iaclasslibrary.IO.PropertyWriter;
 import net.calm.iaclasslibrary.UtilClasses.GenUtils;
 import net.calm.slidej.analysis.Analyser;
+import net.calm.slidej.binary.Inverter;
 import net.calm.slidej.convert.ConvertBinary;
 import net.calm.slidej.io.ImageLoader;
 import net.calm.slidej.properties.SlideJParams;
@@ -229,10 +230,13 @@ public class SlideJ {
             System.out.println("Calculating distance map 1...");
             Img<UnsignedShortType> dm1 = DistanceTransformer.calcDistanceMap(binary, channelCals, tmpDir, false);
 
+            System.out.println("Saving...");
+            saver.saveImg(String.format("%s%sdistanceMap_%d%s", mapOutDir, File.separator, c, SlideJParams.OUTPUT_FILE_EXT), dm1, config);
+
             maps.add(dm1);
 
             System.out.println("Calculating distance map 2...");
-            Img<UnsignedShortType> dm2 = DistanceTransformer.calcDistanceMap(binary, channelCals, tmpDir, true);
+            Img<UnsignedShortType> dm2 = DistanceTransformer.calcDistanceMap(Inverter.invertImage(binary), channelCals, tmpDir, true);
 
             System.out.println("Saving...");
             saver.saveImg(String.format("%s%sinvertedDistanceMap_%d%s", mapOutDir, File.separator, c, SlideJParams.OUTPUT_FILE_EXT), dm2, config);
