@@ -33,7 +33,7 @@ public class SlideJParams extends Properties {
     public static final String AUX_INPUT = "Aux input data";
     public static final String BIN_INPUT = "Binary input data";
     public static final String OUTPUT = "Output directory";
-    public static final String TITLE = "SlideJ v1.0";
+    public static final String TITLE = "SlideJ v1.0.1";
     public static final String FILTER_RADIUS = "Filter radius";
     public static final String TH_FILTER_RADIUS = "Top hat filter radius";
     public static final String DEFAULT_FILTER_RADIUS = "2.0";

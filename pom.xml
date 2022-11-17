@@ -7,13 +7,13 @@
     <parent>
         <groupId>org.scijava</groupId>
         <artifactId>pom-scijava</artifactId>
-        <version>28.0.0</version>
+        <version>31.1.0</version>
         <relativePath/>
     </parent>
 
     <groupId>net.calm</groupId>
     <artifactId>slidej</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.1</version>
 
     <build>
         <plugins>
@@ -143,13 +143,17 @@
             <id>scijava.public</id>
             <url>https://maven.scijava.org/content/groups/public</url>
         </repository>
+        <repository>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/djpbarry/*</url>
+        </repository>
     </repositories>
 
     <dependencies>
         <dependency>
             <groupId>net.calm</groupId>
             <artifactId>iaclasslibrary</artifactId>
-            <version>1.0.1</version>
+            <version>1.0.17</version>
         </dependency>
         <dependency>
             <groupId>net.imagej</groupId>

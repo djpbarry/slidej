@@ -116,6 +116,7 @@ public class SlideJ {
             CalibratedAxis axis = axes.get(i);
             AxisType type = axis.type();
             if (axis instanceof DefaultLinearAxis) {
+                ((DefaultLinearAxis) axis).setOrigin(0.0);
                 calNeighbourhood[i] = (int) Math.round(axis.rawValue(neighbourhoodSize));
                 calibrations[i] = ((DefaultLinearAxis) axis).scale();
             }
