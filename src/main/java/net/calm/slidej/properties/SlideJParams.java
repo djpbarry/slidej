@@ -28,18 +28,30 @@ import java.util.Properties;
 
 public class SlideJParams extends Properties {
     public static final String THRESHOLD = "Threshold";
+    public static final String TOP_HAT = "Top hat";
     public static final String RAW_INPUT = "Raw input data";
     public static final String AUX_INPUT = "Aux input data";
     public static final String BIN_INPUT = "Binary input data";
     public static final String OUTPUT = "Output directory";
     public static final String TITLE = "SlideJ v1.0";
     public static final String FILTER_RADIUS = "Filter radius";
+    public static final String TH_FILTER_RADIUS = "Top hat filter radius";
     public static final String DEFAULT_FILTER_RADIUS = "2.0";
+    public static final String DEFAULT_TH_FILTER_RADIUS = "5.0";
     public static final String DEFAULT_THRESHOLD_METHOD = "Default";
     public static final String THRESHOLD_CHANNEL = "Segment";
     public static final String DEFAULT_THRESHOLD_CHANNEL = "true";
+    public static final String DEFAULT_TH_CHANNEL = "false";
+    public static final String COLOC = "Colocalise";
+    public static final String DO_3D = "3D Analysis";
+    public static final String NEIGHBOURHOOD = "Neighbourhood size";
     public static final int CELL_SIZE = 1000;
     public static final String OUTPUT_FILE_EXT = ".ome.btf";
+    public static final int X_AXIS = 0;
+    public static final int Y_AXIS = 1;
+    public static final int Z_AXIS = 2;
+    public static final int C_AXIS = 3;
+    public static final int N_AXIS = 4;
 
     public SlideJParams() {
 
