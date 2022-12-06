@@ -33,6 +33,8 @@ import net.calm.iaclasslibrary.IO.PropertyWriter;
 import net.calm.iaclasslibrary.TimeAndDate.TimeAndDate;
 import net.calm.iaclasslibrary.UtilClasses.GenUtils;
 import net.calm.slidej.analysis.Analyser;
+import net.calm.slidej.analysis.ObjectAnalyser;
+import net.calm.slidej.convert.ConvertBinary;
 import net.calm.slidej.io.ImageLoader;
 import net.calm.slidej.properties.SlideJParams;
 import net.calm.slidej.segmentation.ImageThresholder;
@@ -41,16 +43,25 @@ import net.imagej.axis.AxisType;
 import net.imagej.axis.CalibratedAxis;
 import net.imagej.axis.DefaultAxisType;
 import net.imagej.axis.DefaultLinearAxis;
+import net.imglib2.Cursor;
+import net.imglib2.Dimensions;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.algorithm.gauss3.Gauss3;
+import net.imglib2.algorithm.labeling.ConnectedComponents;
 import net.imglib2.algorithm.morphology.StructuringElements;
 import net.imglib2.algorithm.morphology.TopHat;
 import net.imglib2.cache.img.DiskCachedCellImgFactory;
 import net.imglib2.img.Img;
+import net.imglib2.roi.labeling.ImgLabeling;
+import net.imglib2.roi.labeling.LabelRegion;
+import net.imglib2.roi.labeling.LabelRegions;
+import net.imglib2.roi.labeling.LabelingType;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.logic.BitType;
+import net.imglib2.type.logic.BoolType;
 import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.RealType;
+import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Util;
@@ -146,7 +157,7 @@ public class SlideJ {
         String mapOutputs = null;
 
         try {
-            output = makeOutputDirectories(new File(file.getParent()), String.format("%s_SlideJ_%s", file.getName(), TimeAndDate.getCurrentTimeAndDate().replace('/', '-').replace(':','-'))).get(0);
+            output = makeOutputDirectories(new File(file.getParent()), String.format("%s_SlideJ_%s", file.getName(), TimeAndDate.getCurrentTimeAndDate().replace('/', '-').replace(':', '-'))).get(0);
             ArrayList<String> children = makeOutputDirectories(new File(output), BINARIES, AUX_INPUTS);
             binaryOutputs = children.get(0);
             mapOutputs = children.get(1);
@@ -166,7 +177,8 @@ public class SlideJ {
 //                mapOutputs,
 //                caxis, calibrations);
 
-        ArrayList<RandomAccessibleInterval<UnsignedShortType>> distanceMaps = generateDistanceMaps(img, mapOutputs, binaryOutputs, axisOrder[SlideJParams.C_AXIS], calibrations);
+        ArrayList<RandomAccessibleInterval<UnsignedShortType>> distanceMaps = generateDistanceMaps(img, mapOutputs,
+                binaryOutputs, axisOrder[SlideJParams.C_AXIS], calibrations, axisOrder, dimLabels, file);
 
         System.out.println("Concatenating distance maps...");
 //
@@ -219,7 +231,11 @@ public class SlideJ {
         saveAnalysisParameters();
     }
 
-    private ArrayList<RandomAccessibleInterval<UnsignedShortType>> generateDistanceMaps(Img<UnsignedShortType> img, String mapOutDir, String binOutDir, int caxis, double[] calibrations) {
+    private ArrayList<RandomAccessibleInterval<UnsignedShortType>> generateDistanceMaps(Img<UnsignedShortType> img,
+                                                                                        String mapOutDir, String binOutDir,
+                                                                                        int caxis, double[] calibrations,
+                                                                                        int[] axisOrder, String[] dimLabels,
+                                                                                        File file) {
         long[] dims = new long[img.numDimensions()];
         img.dimensions(dims);
 
@@ -260,18 +276,26 @@ public class SlideJ {
 
             System.out.println("Thresholding...");
             Img<BitType> binary = thresholdImg(filtered, props.getChannelProperty(SlideJParams.THRESHOLD, c, SlideJParams.DEFAULT_THRESHOLD_METHOD));
+            Img<UnsignedShortType> labelled = (new DiskCachedCellImgFactory<>(new UnsignedShortType())).create(binary);
+            ConnectedComponents.labelAllConnectedComponents(binary, labelled, ConnectedComponents.StructuringElement.EIGHT_CONNECTED);
+
+            ArrayList<RandomAccessibleInterval<BoolType>> regions = getRegionsList(labelled);
+            analyseObjects(regions, img, calibrations, axisOrder, dimLabels, file);
+
 //                Img<BitType> binary = thresholdImg(filtered, method);
-//                System.out.println("Converting binary image...");
-//                Img<UnsignedByteType> convertedBinary = ConvertBinary.convertBinary(binary, tmpDir);
-//
-//                System.out.println("Saving...");
-//                try {
-//                    saver.saveImg(String.format("%S%S%sthreshold_%d.ome.btf", binOutDir, File.separator, method, c), convertedBinary, config);
-//                } catch (Exception e) {
-//                    System.out.println("Saving failed.");
-//                    System.out.println(e.toString());
-//                    System.out.println(e.getMessage());
-//                }
+            System.out.println("Converting binary image...");
+            Img<UnsignedByteType> convertedBinary = ConvertBinary.convertBinary(binary, tmpDir);
+
+            System.out.println("Saving...");
+            try {
+                saver.saveImg(String.format("%S%S%sthreshold_%d.ome.btf", binOutDir, File.separator,
+                        props.getChannelProperty(SlideJParams.THRESHOLD, c, SlideJParams.DEFAULT_THRESHOLD_METHOD), c), convertedBinary, config);
+                saver.saveImg(String.format("%S%Slabeling_%d.ome.btf", binOutDir, File.separator, c), labelled, config);
+            } catch (Exception e) {
+                System.out.println("Saving failed.");
+                System.out.println(e.toString());
+                System.out.println(e.getMessage());
+            }
 
             System.out.println("Calculating distance map 1...");
             Img<UnsignedShortType> dm1 = DistanceTransformer.calcDistanceMap(binary, channelCals, tmpDir, false);
@@ -377,5 +401,61 @@ public class SlideJ {
         }
 
         return span;
+    }
+
+    private ArrayList<RandomAccessibleInterval<BoolType>> getRegionsList(RandomAccessibleInterval<UnsignedShortType> img) {
+        final Dimensions dims = img;
+        final UnsignedShortType t = new UnsignedShortType();
+        final RandomAccessibleInterval<UnsignedShortType> labelImg = Util.getArrayOrCellImgFactory(dims, t).create(dims, t);
+        ImgLabeling<Integer, UnsignedShortType> labelingImg = new ImgLabeling<Integer, UnsignedShortType>(labelImg);
+
+        final Cursor<LabelingType<Integer>> labelCursor = Views.flatIterable(labelingImg).cursor();
+
+        for (final UnsignedShortType input : Views.flatIterable(img)) {
+            final LabelingType<Integer> element = labelCursor.next();
+            if (input.getRealFloat() != 0) {
+                element.add((int) input.getRealFloat());
+            }
+        }
+
+        // create list of regions
+        LabelRegions<Integer> labelRegions = new LabelRegions<Integer>(labelingImg);
+        ArrayList<RandomAccessibleInterval<BoolType>> regionsList = new ArrayList<RandomAccessibleInterval<BoolType>>();
+
+        Object[] regionsArr = labelRegions.getExistingLabels().toArray();
+        for (int i = 0; i < labelRegions.getExistingLabels().size(); i++) {
+            LabelRegion<Integer> lr = labelRegions.getLabelRegion((Integer) regionsArr[i]);
+
+            regionsList.add(lr);
+        }
+        return regionsList;
+    }
+
+    void analyseObjects(ArrayList<RandomAccessibleInterval<BoolType>> regions, Img<UnsignedShortType> img,
+                        double[] calibrations, int[] axisOrder, String[] dimLabels, File file) {
+        ObjectAnalyser<UnsignedShortType> a = new ObjectAnalyser<>(dimLabels, calibrations, axisOrder);
+
+//        System.out.println("Loading aux channels and concatanating datset...");
+
+        System.out.println("Done.");
+        System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
+        System.out.println("Analysing intensities in all channels...");
+
+        a.analyse(img, regions);
+
+        System.out.println("Saving results...");
+
+        try {
+            ResultsTable[] rt = a.getRt();
+            File outputData = new File(String.format("%s%s%s_object_results.csv", props.getProperty(SlideJParams.OUTPUT),
+                    File.separator, file.getName()));
+            if (outputData.exists() && !outputData.delete())
+                throw new IOException("Cannot delete existing output file.");
+            for (int i = 0; i < rt.length; i++) {
+                DataWriter.saveResultsTable(rt[i], outputData, true, i == 0);
+            }
+        } catch (IOException e) {
+            GenUtils.logError(e, "Could not save results file.");
+        }
     }
 }
