@@ -27,15 +27,12 @@ package net.calm.slidej.analysis;
 import ij.measure.ResultsTable;
 import net.calm.slidej.properties.SlideJParams;
 import net.imagej.ops.stats.StatsNamespace;
-import net.imglib2.Cursor;
-import net.imglib2.IterableInterval;
-import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.RealLocalizable;
+import net.imglib2.*;
 import net.imglib2.roi.labeling.LabelRegion;
+import net.imglib2.roi.labeling.LabelRegionCursor;
+import net.imglib2.roi.labeling.LabelRegionRandomAccess;
 import net.imglib2.type.logic.BoolType;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.view.IntervalView;
-import net.imglib2.view.Views;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.apache.commons.math3.stat.descriptive.moment.SecondMoment;
 import org.apache.commons.math3.stat.descriptive.summary.Product;
@@ -72,18 +69,15 @@ class ObjectAnalyserThread<T extends RealType<T>> extends Thread {
         DescriptiveStatistics stats = new DescriptiveStatistics();
         final long[] dims = img.dimensionsAsLongArray();
         int resultsRow = 0;
+        long[] regionPos = new long[dims.length - 1];
         for (RandomAccessibleInterval<BoolType> p : cells) {
             if (p instanceof LabelRegion) {
                 RealLocalizable com = ((LabelRegion<Integer>) p).getCenterOfMass();
                 Integer label = ((LabelRegion<Integer>) p).getLabel();
                 for (int c = 0; c < dims[dimOrder[SlideJParams.C_AXIS]]; c++) {
-                    IntervalView<BoolType> regionChannelView = Views.addDimension(p, c, c);
-                    regionChannelView = Views.permute(regionChannelView, 2, 3);
-                    view = Views.interval(img, regionChannelView);
-                    cursor = view.cursor();
-//                    LabelRegionCursor regionCursor = ((LabelRegion<?>) p).cursor();
-//                    LabelRegionRandomAccess<Integer> regionRA = ((LabelRegion<Integer>) p).randomAccess();
-//                    RandomAccess<T> imageRA = img.randomAccess();
+                    LabelRegionCursor regionCursor = ((LabelRegion<?>) p).cursor();
+                    LabelRegionRandomAccess<Integer> regionRA = ((LabelRegion<Integer>) p).randomAccess();
+                    RandomAccess<T> imageRA = img.randomAccess();
                     stats.clear();
                     int index = 0;
                     for (int d = 0; d < dims.length; d++) {
@@ -92,12 +86,11 @@ class ObjectAnalyserThread<T extends RealType<T>> extends Thread {
                         }
                     }
                     rt.setValue(dimLabels[dimOrder[SlideJParams.C_AXIS]], resultsRow, c);
-                    while (cursor.hasNext()) {
-                        cursor.fwd();
-//                        regionCursor.localize(pos);
-//                        imageRA.setPosition(pos);
-                        stats.addValue(cursor.get().getRealDouble());
-//                        regionCursor.fwd();
+                    while (regionCursor.hasNext()) {
+                        regionCursor.localize(regionPos);
+                        imageRA.setPosition(new long[]{regionPos[0], regionPos[1], c, regionPos[2]});
+                        stats.addValue(imageRA.get().getRealDouble());
+                        regionCursor.fwd();
                     }
                     rt.setValue("Detection Channel", resultsRow, channel);
                     rt.setValue("Object ID", resultsRow, label);
@@ -117,16 +110,16 @@ class ObjectAnalyserThread<T extends RealType<T>> extends Thread {
                     rt.setValue("Product", resultsRow, (new Product()).evaluate(stats.getValues()));
 //            rt.setValue("Sum of Logs", resultsRow, (new SumOfLogs()).evaluate(stats.getValues()));
                     rt.setValue("Second Moment", resultsRow, (new SecondMoment()).evaluate(stats.getValues()));
-                    rt.setValue("ImageJ Geometric Mean", resultsRow, statSpace.geometricMean(view).getRealDouble());
-                    rt.setValue("ImageJ Harmonic Mean", resultsRow, statSpace.harmonicMean(view).getRealDouble());
-                    rt.setValue("ImageJ Kurtosis", resultsRow, statSpace.kurtosis(view).getRealDouble());
-                    rt.setValue("ImageJ Moment 1 About Mean", resultsRow, statSpace.moment1AboutMean(view).getRealDouble());
-                    rt.setValue("ImageJ Moment 2 About Mean", resultsRow, statSpace.moment2AboutMean(view).getRealDouble());
-                    rt.setValue("ImageJ Moment 3 About Mean", resultsRow, statSpace.moment3AboutMean(view).getRealDouble());
-                    rt.setValue("ImageJ Moment 4 About Mean", resultsRow, statSpace.moment4AboutMean(view).getRealDouble());
-                    rt.setValue("ImageJ Skewness", resultsRow, statSpace.skewness(view).getRealDouble());
-                    rt.setValue("ImageJ Sum of Inverses", resultsRow, statSpace.sumOfInverses(view).getRealDouble());
-                    rt.setValue("ImageJ Sum of Squares", resultsRow, statSpace.sumOfSquares(view).getRealDouble());
+//                    rt.setValue("ImageJ Geometric Mean", resultsRow, statSpace.geometricMean(view).getRealDouble());
+//                    rt.setValue("ImageJ Harmonic Mean", resultsRow, statSpace.harmonicMean(view).getRealDouble());
+//                    rt.setValue("ImageJ Kurtosis", resultsRow, statSpace.kurtosis(view).getRealDouble());
+//                    rt.setValue("ImageJ Moment 1 About Mean", resultsRow, statSpace.moment1AboutMean(view).getRealDouble());
+//                    rt.setValue("ImageJ Moment 2 About Mean", resultsRow, statSpace.moment2AboutMean(view).getRealDouble());
+//                    rt.setValue("ImageJ Moment 3 About Mean", resultsRow, statSpace.moment3AboutMean(view).getRealDouble());
+//                    rt.setValue("ImageJ Moment 4 About Mean", resultsRow, statSpace.moment4AboutMean(view).getRealDouble());
+//                    rt.setValue("ImageJ Skewness", resultsRow, statSpace.skewness(view).getRealDouble());
+//                    rt.setValue("ImageJ Sum of Inverses", resultsRow, statSpace.sumOfInverses(view).getRealDouble());
+//                    rt.setValue("ImageJ Sum of Squares", resultsRow, statSpace.sumOfSquares(view).getRealDouble());
 
                     resultsRow++;
                 }
