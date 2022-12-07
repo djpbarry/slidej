@@ -280,7 +280,7 @@ public class SlideJ {
             ConnectedComponents.labelAllConnectedComponents(binary, labelled, ConnectedComponents.StructuringElement.EIGHT_CONNECTED);
 
             ArrayList<RandomAccessibleInterval<BoolType>> regions = getRegionsList(labelled);
-            analyseObjects(regions, img, calibrations, axisOrder, dimLabels, file);
+            analyseObjects(regions, img, calibrations, axisOrder, dimLabels, file, c);
 
 //                Img<BitType> binary = thresholdImg(filtered, method);
             System.out.println("Converting binary image...");
@@ -432,8 +432,8 @@ public class SlideJ {
     }
 
     void analyseObjects(ArrayList<RandomAccessibleInterval<BoolType>> regions, Img<UnsignedShortType> img,
-                        double[] calibrations, int[] axisOrder, String[] dimLabels, File file) {
-        ObjectAnalyser<UnsignedShortType> a = new ObjectAnalyser<>(dimLabels, calibrations, axisOrder);
+                        double[] calibrations, int[] axisOrder, String[] dimLabels, File file, int channel) {
+        ObjectAnalyser<UnsignedShortType> a = new ObjectAnalyser<>(dimLabels, calibrations, axisOrder, channel);
 
 //        System.out.println("Loading aux channels and concatanating datset...");
 
@@ -447,8 +447,8 @@ public class SlideJ {
 
         try {
             ResultsTable[] rt = a.getRt();
-            File outputData = new File(String.format("%s%s%s_object_results.csv", props.getProperty(SlideJParams.OUTPUT),
-                    File.separator, file.getName()));
+            File outputData = new File(String.format("%s%s%s_channel_%d_object_results.csv", props.getProperty(SlideJParams.OUTPUT),
+                    File.separator, file.getName(), channel));
             if (outputData.exists() && !outputData.delete())
                 throw new IOException("Cannot delete existing output file.");
             for (int i = 0; i < rt.length; i++) {
