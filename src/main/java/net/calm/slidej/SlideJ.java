@@ -73,9 +73,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class SlideJ {
 
@@ -84,8 +82,8 @@ public class SlideJ {
     private final Path tmpDir;
     private final SlideJParams props;
     private final ArrayList<RandomAccessibleInterval<UnsignedShortType>> maps = new ArrayList<>();
-    private final ArrayList<ArrayList<RandomAccessibleInterval<BoolType>>> regions = new ArrayList<>();
     private final ArrayList<String> channelNames = new ArrayList<>();
+    private final LinkedHashMap<String, ArrayList<RandomAccessibleInterval<BoolType>>> regions = new LinkedHashMap<>();
 
     public SlideJ(File propsLocation, Path tmpDir) {
         props = new SlideJParams();
@@ -186,9 +184,7 @@ public class SlideJ {
 //                binaryOutputs,
 //                mapOutputs,
 //                caxis, calibrations);
-
-        generateDistanceMaps(img, mapOutputs,
-                binaryOutputs, axisOrder[SlideJParams.C_AXIS], calibrations, axisOrder, dimLabels, file);
+        generateDistanceMaps(img, mapOutputs, binaryOutputs, axisOrder[SlideJParams.C_AXIS], calibrations);
 
         System.out.println("Concatenating distance maps...");
 //
@@ -224,8 +220,8 @@ public class SlideJ {
             GenUtils.logError(e, "Could not save results file.");
         }
 
-        for (int c = 0; c < regions.size(); c++) {
-            analyseObjects(regions.get(c), concat, calibrations, axisOrder, dimLabels, file, c);
+        for (Map.Entry<String, ArrayList<RandomAccessibleInterval<BoolType>>> entry : regions.entrySet()) {
+            analyseObjects(entry.getValue(), concat, calibrations, axisOrder, dimLabels, file, entry.getKey());
         }
 
         if (Boolean.parseBoolean(props.getProperty(SlideJParams.COLOC))) {
@@ -247,9 +243,7 @@ public class SlideJ {
 
     private void generateDistanceMaps(Img<UnsignedShortType> img,
                                       String mapOutDir, String binOutDir,
-                                      int caxis, double[] calibrations,
-                                      int[] axisOrder, String[] dimLabels,
-                                      File file) {
+                                      int caxis, double[] calibrations) {
         long[] dims = new long[img.numDimensions()];
         img.dimensions(dims);
 
@@ -292,7 +286,7 @@ public class SlideJ {
             System.out.println("Labelling connected components...");
             Img<UnsignedShortType> labelled = (new DiskCachedCellImgFactory<>(new UnsignedShortType())).create(binary);
             ConnectedComponents.labelAllConnectedComponents(binary, labelled, ConnectedComponents.StructuringElement.EIGHT_CONNECTED);
-            regions.add(getRegionsList(labelled));
+            regions.put(channelNames.get(c), getRegionsList(labelled));
 
 //                Img<BitType> binary = thresholdImg(filtered, method);
             System.out.println("Converting binary image...");
@@ -446,8 +440,8 @@ public class SlideJ {
     }
 
     void analyseObjects(ArrayList<RandomAccessibleInterval<BoolType>> regions, RandomAccessibleInterval<UnsignedShortType> img,
-                        double[] calibrations, int[] axisOrder, String[] dimLabels, File file, int channel) {
-        ObjectAnalyser<UnsignedShortType> a = new ObjectAnalyser<>(dimLabels, calibrations, axisOrder, channel, channelNames);
+                        double[] calibrations, int[] axisOrder, String[] dimLabels, File file, String channel) {
+        ObjectAnalyser<UnsignedShortType> a = new ObjectAnalyser<>(dimLabels, calibrations, axisOrder, channelNames);
 
 //        System.out.println("Loading aux channels and concatanating datset...");
 
@@ -461,7 +455,7 @@ public class SlideJ {
 
         try {
             ResultsTable[] rt = a.getRt();
-            File outputData = new File(String.format("%s%s%s_channel_%d_object_results.csv", props.getProperty(SlideJParams.OUTPUT),
+            File outputData = new File(String.format("%s%s%s_%s_object_results.csv", props.getProperty(SlideJParams.OUTPUT),
                     File.separator, file.getName(), channel));
             if (outputData.exists() && !outputData.delete())
                 throw new IOException("Cannot delete existing output file.");

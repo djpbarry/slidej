@@ -49,12 +49,11 @@ class ObjectAnalyserThread<T extends RealType<T>> extends Thread {
     private final int[] dimOrder;
     private final double[] calibrations;
     private final StatsNamespace statSpace;
-    private final int channel;
     private final ArrayList<String> channelNames;
 
     public ObjectAnalyserThread(final List<RandomAccessibleInterval<BoolType>> cells, final RandomAccessibleInterval<T> img,
                                 final ResultsTable rt, final String[] dimLabels, final int[] dimOrder,
-                                final double[] calibrations, StatsNamespace statSpace, int channel, ArrayList<String> channelNames) {
+                                final double[] calibrations, StatsNamespace statSpace, ArrayList<String> channelNames) {
         this.rt = rt;
         this.cells = cells;
         this.img = img;
@@ -62,13 +61,10 @@ class ObjectAnalyserThread<T extends RealType<T>> extends Thread {
         this.dimOrder = dimOrder;
         this.calibrations = calibrations;
         this.statSpace = statSpace;
-        this.channel = channel;
         this.channelNames = channelNames;
     }
 
     public void run() {
-        IterableInterval<T> view;
-        Cursor<T> cursor;
         DescriptiveStatistics stats = new DescriptiveStatistics();
         final long[] dims = img.dimensionsAsLongArray();
         int resultsRow = 0;
@@ -88,15 +84,12 @@ class ObjectAnalyserThread<T extends RealType<T>> extends Thread {
                     LabelRegionCursor regionCursor = ((LabelRegion<?>) p).cursor();
                     RandomAccess<T> imageRA = img.randomAccess();
                     stats.clear();
-                    //rt.setValue(dimLabels[dimOrder[SlideJParams.C_AXIS]], resultsRow, c);
-
                     while (regionCursor.hasNext()) {
                         regionCursor.localize(regionPos);
                         imageRA.setPosition(new long[]{regionPos[0], regionPos[1], c, regionPos[2]});
                         stats.addValue(imageRA.get().getRealDouble());
                         regionCursor.fwd();
                     }
-                    //rt.setValue("Detection Channel", resultsRow, channel);
                     rt.setValue(channelNames.get(c) + "_Mean", resultsRow, stats.getMean());
                     rt.setValue(channelNames.get(c) + "_Median", resultsRow, stats.getPercentile(50.0));
                     rt.setValue(channelNames.get(c) + "_Geometric Mean", resultsRow, stats.getGeometricMean());
