@@ -42,12 +42,14 @@ public class ObjectAnalyser<T extends RealType<T>> {
     private final int[] dimOrder;
     private Img<FloatType>[][] outputs;
     private final int channel;
+    private final ArrayList<String> channelNames;
 
-    public ObjectAnalyser(String[] dimLabels, double[] calibrations, int[] dimOrder, int channel) {
+    public ObjectAnalyser(String[] dimLabels, double[] calibrations, int[] dimOrder, int channel, ArrayList<String> channelNames) {
         this.dimLabels = dimLabels;
         this.calibrations = calibrations;
         this.dimOrder = dimOrder;
         this.channel = channel;
+        this.channelNames = channelNames;
     }
 
     public void analyse(RandomAccessibleInterval<T> img, ArrayList<RandomAccessibleInterval<BoolType>> regions) {
@@ -71,7 +73,7 @@ public class ObjectAnalyser<T extends RealType<T>> {
             rt[thread] = new ResultsTable();
             int endIndex = Math.min(startIndex + nCellsPerThread, regions.size() - 1);
             ats[thread] = new ObjectAnalyserThread<T>(regions.subList(startIndex, endIndex), img,
-                    rt[thread], dimLabels, dimOrder, calibrations, stats, channel);
+                    rt[thread], dimLabels, dimOrder, calibrations, stats, channel, channelNames);
             ats[thread].start();
             startIndex += nCellsPerThread;
         }

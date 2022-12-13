@@ -28,6 +28,7 @@ import ij.measure.ResultsTable;
 import io.scif.ImageMetadata;
 import io.scif.config.SCIFIOConfig;
 import io.scif.img.ImgSaver;
+import io.scif.ome.OMEMetadata;
 import net.calm.iaclasslibrary.IO.DataWriter;
 import net.calm.iaclasslibrary.IO.PropertyWriter;
 import net.calm.iaclasslibrary.TimeAndDate.TimeAndDate;
@@ -84,6 +85,7 @@ public class SlideJ {
     private final SlideJParams props;
     private final ArrayList<RandomAccessibleInterval<UnsignedShortType>> maps = new ArrayList<>();
     private final ArrayList<ArrayList<RandomAccessibleInterval<BoolType>>> regions = new ArrayList<>();
+    private final ArrayList<String> channelNames = new ArrayList<>();
 
     public SlideJ(File propsLocation, Path tmpDir) {
         props = new SlideJParams();
@@ -109,6 +111,12 @@ public class SlideJ {
         ImageLoader<UnsignedShortType> il = new ImageLoader<>();
         Img<UnsignedShortType> img = il.load(file, series);
         ImageMetadata meta = il.getMeta();
+        OMEMetadata omeMeta = il.getOmeMeta();
+
+        for (int c = 0; c < omeMeta.getRoot().getChannelCount(0); c++) {
+            channelNames.add(omeMeta.getRoot().getChannelFluor(0, c));
+        }
+
         List<CalibratedAxis> axes = meta.getAxes();
 
         System.out.println(String.format("%s loaded.", file.getAbsolutePath()));
@@ -305,6 +313,7 @@ public class SlideJ {
             Img<UnsignedShortType> dm1 = DistanceTransformer.calcDistanceMap(binary, channelCals, tmpDir, false);
 
             maps.add(dm1);
+            channelNames.add(channelNames.get(c) + "_" + "DistanceMap");
 
             System.out.println("Calculating distance map 2...");
             Img<UnsignedShortType> dm2 = DistanceTransformer.calcDistanceMap(binary, channelCals, tmpDir, true);
@@ -313,6 +322,7 @@ public class SlideJ {
             saver.saveImg(String.format("%s%sdistanceMap_%d%s", mapOutDir, File.separator, c, SlideJParams.OUTPUT_FILE_EXT), dm2, config);
 //            }
             maps.add(dm2);
+            channelNames.add(channelNames.get(c) + "_" + "InvertedDistanceMap");
         }
         return;
     }
@@ -437,7 +447,7 @@ public class SlideJ {
 
     void analyseObjects(ArrayList<RandomAccessibleInterval<BoolType>> regions, RandomAccessibleInterval<UnsignedShortType> img,
                         double[] calibrations, int[] axisOrder, String[] dimLabels, File file, int channel) {
-        ObjectAnalyser<UnsignedShortType> a = new ObjectAnalyser<>(dimLabels, calibrations, axisOrder, channel);
+        ObjectAnalyser<UnsignedShortType> a = new ObjectAnalyser<>(dimLabels, calibrations, axisOrder, channel, channelNames);
 
 //        System.out.println("Loading aux channels and concatanating datset...");
 

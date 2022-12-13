@@ -28,17 +28,21 @@
 package net.calm.slidej.io;
 
 import io.scif.ImageMetadata;
+import io.scif.Metadata;
 import io.scif.SCIFIO;
 import io.scif.config.SCIFIOConfig;
 import io.scif.img.ImgOpener;
 import io.scif.img.SCIFIOImgPlus;
+import io.scif.ome.OMEMetadata;
 import io.scif.services.DatasetIOService;
+import net.imagej.ImageJ;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.view.Views;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 
 /**
@@ -49,6 +53,7 @@ import java.util.ArrayList;
 public class ImageLoader<T extends UnsignedShortType> {
 
     private ImageMetadata meta;
+    private OMEMetadata omeMeta;
 
     public ImageLoader() {
 
@@ -58,6 +63,18 @@ public class ImageLoader<T extends UnsignedShortType> {
         SCIFIOConfig config = new SCIFIOConfig();
         config.imgOpenerSetIndex(series);
         config.imgOpenerSetImgModes(SCIFIOConfig.ImgMode.CELL);
+
+        SCIFIO scifio = new SCIFIO();
+
+        try {
+            net.imagej.Dataset data = scifio.datasetIO().open(file.getAbsolutePath());
+            Metadata globalMeta = (Metadata) data.getProperties().get("scifio.metadata.global");
+            Object imageMeta = data.getProperties().get("scifio.metadata.image");
+            omeMeta = new OMEMetadata((new ImageJ()).getContext());
+            scifio.translator().translate(globalMeta, omeMeta, true);
+        } catch (IOException e) {
+            System.out.println("Failed to read OME metadata.");
+        }
 
         SCIFIOImgPlus<?> sciImg = new ImgOpener().openImgs(file.getAbsolutePath(), config).get(0);
         this.meta = sciImg.getImageMetadata();
@@ -89,5 +106,9 @@ public class ImageLoader<T extends UnsignedShortType> {
 
     public ImageMetadata getMeta() {
         return meta;
+    }
+
+    public OMEMetadata getOmeMeta() {
+        return omeMeta;
     }
 }
