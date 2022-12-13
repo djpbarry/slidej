@@ -294,9 +294,9 @@ public class SlideJ {
 
             System.out.println("Saving...");
             try {
+                saver.saveImg(String.format("%S%Slabeling_%d.ome.btf", binOutDir, File.separator, c), labelled, config);
                 saver.saveImg(String.format("%S%S%sthreshold_%d.ome.btf", binOutDir, File.separator,
                         props.getChannelProperty(SlideJParams.THRESHOLD, c, SlideJParams.DEFAULT_THRESHOLD_METHOD), c), convertedBinary, config);
-                saver.saveImg(String.format("%S%Slabeling_%d.ome.btf", binOutDir, File.separator, c), labelled, config);
             } catch (Exception e) {
                 System.out.println("Saving failed.");
                 System.out.println(e.toString());
