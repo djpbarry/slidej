@@ -66,17 +66,18 @@ public class ObjectAnalyser<T extends RealType<T>> {
 
         int nCellsPerThread = (int) Math.ceil((float) regions.size() / nThreads);
         StatsNamespace stats = new ImageJ().op().stats();
-        for (int thread = 0; thread < nThreads; thread++) {
+        int startIndex = 0;
+        for (int thread = 0; thread < nThreads && startIndex < regions.size(); thread++) {
             rt[thread] = new ResultsTable();
-            int startIndex = thread * nCellsPerThread;
-            int endIndex = Math.min(startIndex + nCellsPerThread, regions.size());
+            int endIndex = Math.min(startIndex + nCellsPerThread, regions.size() - 1);
             ats[thread] = new ObjectAnalyserThread<T>(regions.subList(startIndex, endIndex), img,
                     rt[thread], dimLabels, dimOrder, calibrations, stats, channel);
             ats[thread].start();
+            startIndex += nCellsPerThread;
         }
         try {
             for (int thread = 0; thread < nThreads; thread++) {
-                ats[thread].join();
+                if (ats[thread] != null) ats[thread].join();
             }
         } catch (InterruptedException ie) {
             System.out.println(String.format("Thread %d was interrupted:\n %s", Thread.currentThread().getId(), ie));
