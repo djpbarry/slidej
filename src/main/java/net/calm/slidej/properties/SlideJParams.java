@@ -47,6 +47,8 @@ public class SlideJParams extends Properties {
     public static final String NEIGHBOURHOOD = "Neighbourhood size";
     public static final int CELL_SIZE = 1000;
     public static final String OUTPUT_FILE_EXT = ".ome.btf";
+    public static final String N_STEPS = "Number of steps";
+    public static final String CHANNEL_FOR_STEP = "Channel for";
     public static final int X_AXIS = 0;
     public static final int Y_AXIS = 1;
     public static final int Z_AXIS = 2;
@@ -61,7 +63,7 @@ public class SlideJParams extends Properties {
         return super.setProperty(getFormattedKey(key, channel), value);
     }
 
-    public String getChannelProperty(String key, int channel, String defaultVal) {
+    public String getStepProperty(String key, int channel, String defaultVal) {
         String formattedKey = getFormattedKey(key, channel);
         String prop = super.getProperty(formattedKey);
         if (prop == null) {
@@ -72,6 +74,6 @@ public class SlideJParams extends Properties {
     }
 
     private String getFormattedKey(String key, int channel) {
-        return String.format("%s Channel %d", key, channel);
+        return String.format("%s Step %d", key, channel);
     }
 }

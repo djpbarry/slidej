@@ -261,17 +261,18 @@ public class SlideJ {
         System.arraycopy(calibrations, 0, channelCals, 0, caxis);
         System.arraycopy(calibrations, caxis + 1, channelCals, caxis, channelCals.length - caxis);
 
-        for (int c = 0; c < dims[caxis]; c++) {
-            if (!Boolean.parseBoolean(props.getChannelProperty(SlideJParams.THRESHOLD_CHANNEL, c, SlideJParams.DEFAULT_THRESHOLD_CHANNEL)))
+        for (int s = 0; s < Integer.parseInt(props.getProperty(SlideJParams.N_STEPS)); s++) {
+            int c = Integer.parseInt(props.getStepProperty(SlideJParams.CHANNEL_FOR_STEP, s, Integer.toString(s)));
+            if (!Boolean.parseBoolean(props.getStepProperty(SlideJParams.THRESHOLD_CHANNEL, s, SlideJParams.DEFAULT_THRESHOLD_CHANNEL)))
                 continue;
-            System.out.println(String.format("Processing channel %d...", c));
+            System.out.println(String.format("Processing step %d...", s));
             RandomAccessibleInterval<UnsignedShortType> channel = Views.hyperSlice(img, caxis, c);
 
             System.out.println("Filtering...");
             Img<UnsignedShortType> filtered = (new DiskCachedCellImgFactory<>(new UnsignedShortType())).create(channel);
             Gauss3.gauss(getSigma(channel.numDimensions(), c, channelCals), Views.extendValue(channel, img.firstElement().createVariable()), filtered);
 
-            if (Boolean.parseBoolean(props.getChannelProperty(SlideJParams.TOP_HAT, c, SlideJParams.DEFAULT_TH_CHANNEL))) {
+            if (Boolean.parseBoolean(props.getStepProperty(SlideJParams.TOP_HAT, s, SlideJParams.DEFAULT_TH_CHANNEL))) {
                 System.out.println("Top-hat filtering...");
                 Img<UnsignedShortType> thFiltered = TopHat.topHat(filtered, StructuringElements.rectangle(getSpan(channel.numDimensions(), c, channelCals, SlideJParams.TOP_HAT, SlideJParams.DEFAULT_TH_FILTER_RADIUS)), Runtime.getRuntime().availableProcessors());
 //                try {
@@ -287,7 +288,7 @@ public class SlideJ {
 //            for (String method : methods) {
 
             System.out.println("Thresholding...");
-            Img<BitType> binary = thresholdImg(filtered, props.getChannelProperty(SlideJParams.THRESHOLD, c, SlideJParams.DEFAULT_THRESHOLD_METHOD));
+            Img<BitType> binary = thresholdImg(filtered, props.getStepProperty(SlideJParams.THRESHOLD, s, SlideJParams.DEFAULT_THRESHOLD_METHOD));
 
             System.out.println("Labelling connected components...");
             Img<UnsignedShortType> labelled = (new DiskCachedCellImgFactory<>(new UnsignedShortType())).create(binary);
@@ -302,7 +303,7 @@ public class SlideJ {
             try {
                 saver.saveImg(String.format("%s%slabeling_%s.ome.btf", binOutDir, File.separator, channelNames.get(c)), labelled, config);
                 saver.saveImg(String.format("%s%s%s_threshold_%s.ome.btf", binOutDir, File.separator,
-                        props.getChannelProperty(SlideJParams.THRESHOLD, c, SlideJParams.DEFAULT_THRESHOLD_METHOD), channelNames.get(c)), convertedBinary, config);
+                        props.getStepProperty(SlideJParams.THRESHOLD, c, SlideJParams.DEFAULT_THRESHOLD_METHOD), channelNames.get(c)), convertedBinary, config);
             } catch (Exception e) {
                 System.out.println("Saving failed.");
                 System.out.println(e.toString());
@@ -392,7 +393,7 @@ public class SlideJ {
 
         for (int d = 0; d < nAxis; d++) {
             sigma[d] = Double.parseDouble(
-                    props.getChannelProperty(
+                    props.getStepProperty(
                             SlideJParams.FILTER_RADIUS,
                             c,
                             SlideJParams.DEFAULT_FILTER_RADIUS
@@ -409,7 +410,7 @@ public class SlideJ {
         for (int d = 0; d < nAxis; d++) {
             span[d] = (int) Math.round(
                     Double.parseDouble(
-                            props.getChannelProperty(
+                            props.getStepProperty(
                                     SlideJParams.TH_FILTER_RADIUS,
                                     c,
                                     SlideJParams.DEFAULT_TH_FILTER_RADIUS
