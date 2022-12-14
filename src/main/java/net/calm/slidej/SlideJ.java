@@ -166,9 +166,12 @@ public class SlideJ {
 
         try {
             output = makeOutputDirectories(new File(file.getParent()), String.format("%s_SlideJ_%s", file.getName(), TimeAndDate.getCurrentTimeAndDate().replace('/', '-').replace(':', '-'))).get(0);
+            System.out.println(String.format("%s created", output));
             ArrayList<String> children = makeOutputDirectories(new File(output), BINARIES, AUX_INPUTS);
             binaryOutputs = children.get(0);
+            System.out.println(String.format("%s created", binaryOutputs));
             mapOutputs = children.get(1);
+            System.out.println(String.format("%s created", mapOutputs));
             props.setProperty(SlideJParams.OUTPUT, output);
             props.setProperty(SlideJParams.AUX_INPUT, mapOutputs);
             props.setProperty(SlideJParams.BIN_INPUT, binaryOutputs);
@@ -294,9 +297,9 @@ public class SlideJ {
 
             System.out.println("Saving...");
             try {
-                saver.saveImg(String.format("%S%Slabeling_%d.ome.btf", binOutDir, File.separator, c), labelled, config);
-                saver.saveImg(String.format("%S%S%sthreshold_%d.ome.btf", binOutDir, File.separator,
-                        props.getChannelProperty(SlideJParams.THRESHOLD, c, SlideJParams.DEFAULT_THRESHOLD_METHOD), c), convertedBinary, config);
+                saver.saveImg(String.format("%s%slabeling_%s.ome.btf", binOutDir, File.separator, channelNames.get(c)), labelled, config);
+                saver.saveImg(String.format("%s%s%s_threshold_%s.ome.btf", binOutDir, File.separator,
+                        props.getChannelProperty(SlideJParams.THRESHOLD, c, SlideJParams.DEFAULT_THRESHOLD_METHOD), channelNames.get(c)), convertedBinary, config);
             } catch (Exception e) {
                 System.out.println("Saving failed.");
                 System.out.println(e.toString());
@@ -306,6 +309,9 @@ public class SlideJ {
             System.out.println("Calculating distance map 1...");
             Img<UnsignedShortType> dm1 = DistanceTransformer.calcDistanceMap(binary, channelCals, tmpDir, false);
 
+            System.out.println("Saving...");
+            saver.saveImg(String.format("%s%sdistanceMap_%s%s", mapOutDir, File.separator, channelNames.get(c), SlideJParams.OUTPUT_FILE_EXT), dm1, config);
+
             maps.add(dm1);
             channelNames.add(channelNames.get(c) + "_" + "DistanceMap");
 
@@ -313,7 +319,7 @@ public class SlideJ {
             Img<UnsignedShortType> dm2 = DistanceTransformer.calcDistanceMap(binary, channelCals, tmpDir, true);
 
             System.out.println("Saving...");
-            saver.saveImg(String.format("%s%sdistanceMap_%d%s", mapOutDir, File.separator, c, SlideJParams.OUTPUT_FILE_EXT), dm2, config);
+            saver.saveImg(String.format("%s%sinvertedDistanceMap_%s%s", mapOutDir, File.separator, channelNames.get(c), SlideJParams.OUTPUT_FILE_EXT), dm2, config);
 //            }
             maps.add(dm2);
             channelNames.add(channelNames.get(c) + "_" + "InvertedDistanceMap");
