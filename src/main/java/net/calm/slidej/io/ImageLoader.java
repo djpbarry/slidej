@@ -38,7 +38,7 @@ import io.scif.services.DatasetIOService;
 import net.imagej.ImageJ;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
-import net.imglib2.type.numeric.integer.UnsignedShortType;
+import net.imglib2.type.numeric.RealType;
 import net.imglib2.view.Views;
 
 import java.io.File;
@@ -50,7 +50,7 @@ import java.util.ArrayList;
  * @author david.barry@crick.ac.uk
  *
  */
-public class ImageLoader<T extends UnsignedShortType> {
+public class ImageLoader<T extends RealType<T>> {
 
     private ImageMetadata meta;
     private OMEMetadata omeMeta;

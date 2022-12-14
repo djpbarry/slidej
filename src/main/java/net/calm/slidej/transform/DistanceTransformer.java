@@ -33,14 +33,15 @@ import net.imglib2.cache.img.DiskCachedCellImgFactory;
 import net.imglib2.img.Img;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
+import net.imglib2.type.numeric.real.FloatType;
 
 import java.nio.file.Path;
 
 public class DistanceTransformer {
 
-    public static Img<UnsignedShortType> calcDistanceMap(Img<BitType> binary, double[] cals, Path tmpDir, boolean inverted) {
+    public static Img<FloatType> calcDistanceMap(Img<BitType> binary, double[] cals, Path tmpDir, boolean inverted) {
         OpService os = (new ImageJ()).op();
-        Img<UnsignedShortType> output = (new DiskCachedCellImgFactory<>(new UnsignedShortType(), new DiskCacheOptions(tmpDir).getOptions())).create(binary);
+        Img<FloatType> output = (new DiskCachedCellImgFactory<>(new FloatType(), new DiskCacheOptions(tmpDir).getOptions())).create(binary);
 
         if (!inverted) {
             //return ImgView.wrap(os.image().distancetransform(output, binary, cals), output.factory());

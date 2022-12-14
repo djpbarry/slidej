@@ -81,7 +81,7 @@ public class SlideJ {
     private final String AUX_INPUTS = "aux_inputs";
     private final Path tmpDir;
     private final SlideJParams props;
-    private final ArrayList<RandomAccessibleInterval<UnsignedShortType>> maps = new ArrayList<>();
+    private final ArrayList<RandomAccessibleInterval<FloatType>> maps = new ArrayList<>();
     private final ArrayList<String> channelNames = new ArrayList<>();
     private final LinkedHashMap<String, ArrayList<RandomAccessibleInterval<BoolType>>> regions = new LinkedHashMap<>();
 
@@ -194,14 +194,17 @@ public class SlideJ {
 ////        RandomAccessibleInterval<T> auxs = il.loadAndConcatenate(
 ////                new File(mapOutputs), caxis);
 
-        RandomAccessibleInterval<UnsignedShortType> auxs = il.concatenate(
+        RandomAccessibleInterval<FloatType> auxs = (new ImageLoader<FloatType>()).concatenate(
                 maps, axisOrder[SlideJParams.C_AXIS]);
 
-        Analyser<UnsignedShortType> a = new Analyser<>(calNeighbourhood, dimLabels, calibrations, axisOrder, Boolean.parseBoolean(props.getProperty(SlideJParams.COLOC)));
+        Analyser<FloatType> a = new Analyser<>(calNeighbourhood, dimLabels, calibrations, axisOrder, Boolean.parseBoolean(props.getProperty(SlideJParams.COLOC)));
 
 //        System.out.println("Loading aux channels and concatanating datset...");
 
-        RandomAccessibleInterval<UnsignedShortType> concat = Views.concatenate(axisOrder[SlideJParams.C_AXIS], img, auxs);
+        ImageLoader<FloatType> ilFloat = new ImageLoader<>();
+        Img<FloatType> imgFloat = ilFloat.load(file, series);
+
+        RandomAccessibleInterval<FloatType> concat = Views.concatenate(axisOrder[SlideJParams.C_AXIS], imgFloat, auxs);
 
         System.out.println("Done.");
         System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
@@ -307,7 +310,7 @@ public class SlideJ {
             }
 
             System.out.println("Calculating distance map 1...");
-            Img<UnsignedShortType> dm1 = DistanceTransformer.calcDistanceMap(binary, channelCals, tmpDir, false);
+            Img<FloatType> dm1 = DistanceTransformer.calcDistanceMap(binary, channelCals, tmpDir, false);
 
             System.out.println("Saving...");
             saver.saveImg(String.format("%s%sdistanceMap_%s%s", mapOutDir, File.separator, channelNames.get(c), SlideJParams.OUTPUT_FILE_EXT), dm1, config);
@@ -316,7 +319,7 @@ public class SlideJ {
             channelNames.add(channelNames.get(c) + "_" + "DistanceMap");
 
             System.out.println("Calculating distance map 2...");
-            Img<UnsignedShortType> dm2 = DistanceTransformer.calcDistanceMap(binary, channelCals, tmpDir, true);
+            Img<FloatType> dm2 = DistanceTransformer.calcDistanceMap(binary, channelCals, tmpDir, true);
 
             System.out.println("Saving...");
             saver.saveImg(String.format("%s%sinvertedDistanceMap_%s%s", mapOutDir, File.separator, channelNames.get(c), SlideJParams.OUTPUT_FILE_EXT), dm2, config);
@@ -445,9 +448,9 @@ public class SlideJ {
         return regionsList;
     }
 
-    void analyseObjects(ArrayList<RandomAccessibleInterval<BoolType>> regions, RandomAccessibleInterval<UnsignedShortType> img,
+    void analyseObjects(ArrayList<RandomAccessibleInterval<BoolType>> regions, RandomAccessibleInterval<FloatType> img,
                         double[] calibrations, int[] axisOrder, String[] dimLabels, File file, String channel) {
-        ObjectAnalyser<UnsignedShortType> a = new ObjectAnalyser<>(dimLabels, calibrations, axisOrder, channelNames);
+        ObjectAnalyser<FloatType> a = new ObjectAnalyser<>(dimLabels, calibrations, axisOrder, channelNames);
 
 //        System.out.println("Loading aux channels and concatanating datset...");
 
