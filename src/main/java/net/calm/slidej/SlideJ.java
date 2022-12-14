@@ -293,7 +293,8 @@ public class SlideJ {
             System.out.println("Labelling connected components...");
             Img<UnsignedShortType> labelled = (new DiskCachedCellImgFactory<>(new UnsignedShortType())).create(binary);
             ConnectedComponents.labelAllConnectedComponents(binary, labelled, ConnectedComponents.StructuringElement.EIGHT_CONNECTED);
-            regions.put(channelNames.get(c), getRegionsList(labelled));
+            String regionsName = String.format("step_%d_%s", s, channelNames.get(c));
+            regions.put(regionsName, getRegionsList(labelled));
 
 //                Img<BitType> binary = thresholdImg(filtered, method);
             System.out.println("Converting binary image...");
@@ -301,9 +302,9 @@ public class SlideJ {
 
             System.out.println("Saving...");
             try {
-                saver.saveImg(String.format("%s%slabeling_%s.ome.btf", binOutDir, File.separator, channelNames.get(c)), labelled, config);
-                saver.saveImg(String.format("%s%s%s_threshold_%s.ome.btf", binOutDir, File.separator,
-                        props.getStepProperty(SlideJParams.THRESHOLD, c, SlideJParams.DEFAULT_THRESHOLD_METHOD), channelNames.get(c)), convertedBinary, config);
+                saver.saveImg(String.format("%s%sLabeling_%s.ome.btf", binOutDir, File.separator, regionsName), labelled, config);
+//                saver.saveImg(String.format("%s%s%s_threshold_%s.ome.btf", binOutDir, File.separator,
+//                        props.getStepProperty(SlideJParams.THRESHOLD, c, SlideJParams.DEFAULT_THRESHOLD_METHOD), channelNames.get(c)), convertedBinary, config);
             } catch (Exception e) {
                 System.out.println("Saving failed.");
                 System.out.println(e.toString());
@@ -314,19 +315,19 @@ public class SlideJ {
             Img<FloatType> dm1 = DistanceTransformer.calcDistanceMap(binary, channelCals, tmpDir, false);
 
             System.out.println("Saving...");
-            saver.saveImg(String.format("%s%sdistanceMap_%s%s", mapOutDir, File.separator, channelNames.get(c), SlideJParams.OUTPUT_FILE_EXT), dm1, config);
+            saver.saveImg(String.format("%s%sDistanceMap_%s%s", mapOutDir, File.separator, regionsName, SlideJParams.OUTPUT_FILE_EXT), dm1, config);
 
             maps.add(dm1);
-            channelNames.add(channelNames.get(c) + "_" + "DistanceMap");
+            channelNames.add(String.format("%s_DistanceMap", regionsName));
 
             System.out.println("Calculating distance map 2...");
             Img<FloatType> dm2 = DistanceTransformer.calcDistanceMap(binary, channelCals, tmpDir, true);
 
             System.out.println("Saving...");
-            saver.saveImg(String.format("%s%sinvertedDistanceMap_%s%s", mapOutDir, File.separator, channelNames.get(c), SlideJParams.OUTPUT_FILE_EXT), dm2, config);
+            saver.saveImg(String.format("%s%sInvertedDistanceMap_%s%s", mapOutDir, File.separator, regionsName, SlideJParams.OUTPUT_FILE_EXT), dm2, config);
 //            }
             maps.add(dm2);
-            channelNames.add(channelNames.get(c) + "_" + "InvertedDistanceMap");
+            channelNames.add(String.format("%s_InvertedDistanceMap", regionsName));
         }
         return;
     }
