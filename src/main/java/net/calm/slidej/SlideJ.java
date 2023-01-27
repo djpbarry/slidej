@@ -24,6 +24,8 @@
 
 package net.calm.slidej;
 
+import ij.IJ;
+import ij.ImagePlus;
 import ij.measure.ResultsTable;
 import io.scif.ImageMetadata;
 import io.scif.config.SCIFIOConfig;
@@ -35,11 +37,11 @@ import net.calm.iaclasslibrary.TimeAndDate.TimeAndDate;
 import net.calm.iaclasslibrary.UtilClasses.GenUtils;
 import net.calm.slidej.analysis.Analyser;
 import net.calm.slidej.analysis.ObjectAnalyser;
-import net.calm.slidej.convert.ConvertBinary;
 import net.calm.slidej.io.ImageLoader;
 import net.calm.slidej.properties.SlideJParams;
 import net.calm.slidej.segmentation.ImageThresholder;
 import net.calm.slidej.transform.DistanceTransformer;
+import net.imagej.ImageJ;
 import net.imagej.axis.AxisType;
 import net.imagej.axis.CalibratedAxis;
 import net.imagej.axis.DefaultAxisType;
@@ -53,6 +55,9 @@ import net.imglib2.algorithm.morphology.StructuringElements;
 import net.imglib2.algorithm.morphology.TopHat;
 import net.imglib2.cache.img.DiskCachedCellImgFactory;
 import net.imglib2.img.Img;
+import net.imglib2.img.ImgView;
+import net.imglib2.img.array.ArrayImgFactory;
+import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.roi.labeling.ImgLabeling;
 import net.imglib2.roi.labeling.LabelRegion;
 import net.imglib2.roi.labeling.LabelRegions;
@@ -68,6 +73,11 @@ import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Util;
 import net.imglib2.view.Views;
 import org.apache.commons.io.FileUtils;
+import sc.fiji.analyzeSkeleton.AnalyzeSkeleton_;
+import sc.fiji.analyzeSkeleton.Graph;
+import sc.fiji.analyzeSkeleton.Point;
+import sc.fiji.analyzeSkeleton.SkeletonResult;
+import sc.fiji.skeletonize3D.Skeletonize3D_;
 
 import java.io.File;
 import java.io.IOException;
@@ -269,7 +279,7 @@ public class SlideJ {
             RandomAccessibleInterval<UnsignedShortType> channel = Views.hyperSlice(img, caxis, c);
 
             System.out.println("Filtering...");
-            Img<UnsignedShortType> filtered = (new DiskCachedCellImgFactory<>(new UnsignedShortType())).create(channel);
+            Img<UnsignedShortType> filtered = (new ArrayImgFactory<>(new UnsignedShortType())).create(channel);
             Gauss3.gauss(getSigma(channel.numDimensions(), c, channelCals), Views.extendValue(channel, img.firstElement().createVariable()), filtered);
 
             if (Boolean.parseBoolean(props.getStepProperty(SlideJParams.TOP_HAT, s, SlideJParams.DEFAULT_TH_CHANNEL))) {
@@ -297,8 +307,8 @@ public class SlideJ {
             regions.put(regionsName, getRegionsList(labelled));
 
 //                Img<BitType> binary = thresholdImg(filtered, method);
-            System.out.println("Converting binary image...");
-            Img<UnsignedByteType> convertedBinary = ConvertBinary.convertBinary(binary, tmpDir);
+//            System.out.println("Converting binary image...");
+//            Img<UnsignedByteType> convertedBinary = ConvertBinary.convertBinary(binary, tmpDir);
 
             System.out.println("Saving...");
             try {
@@ -309,6 +319,56 @@ public class SlideJ {
                 System.out.println("Saving failed.");
                 System.out.println(e.toString());
                 System.out.println(e.getMessage());
+            }
+
+            if (Boolean.parseBoolean(props.getStepProperty(SlideJParams.SKELETONISE, s, SlideJParams.DEFAULT_SKEL_CHANNEL))) {
+                System.out.println("Skeletonising...");
+                ImagePlus skelImp = ImageJFunctions.wrapBit(binary, String.format("Binary_%s", regionsName)).duplicate();
+                Skeletonize3D_ skeletoniser = new Skeletonize3D_();
+                skeletoniser.setup("", skelImp);
+                skeletoniser.run(null);
+
+                System.out.println("Saving...");
+                String skel_filename = String.format("%s%sSkeleton_%s%s", binOutDir, File.separator, regionsName, SlideJParams.OUTPUT_FILE_EXT);
+                saver.saveImg(skel_filename, ImageJFunctions.wrap(skelImp), config);
+                AnalyzeSkeleton_ analyser = new AnalyzeSkeleton_();
+                analyser.setup("", skelImp);
+                SkeletonResult skelResult = analyser.run(AnalyzeSkeleton_.NONE, false, true, null, true, false);
+                ResultsTable rtSkel = new ResultsTable();
+                ArrayList<Point> junctions = skelResult.getListOfJunctionVoxels();
+                int row = 0;
+                for (Point p : junctions) {
+                    rtSkel.setValue("X", row, p.x);
+                    rtSkel.setValue("Y", row, p.y);
+                    rtSkel.setValue("Z", row, p.z);
+                    row++;
+                }
+                try {
+                    File outputData = new File(String.format("%s%s%s_skeleton_junction_results.csv", binOutDir, File.separator, regionsName));
+                    if (outputData.exists() && !outputData.delete())
+                        throw new IOException("Cannot delete existing output file.");
+                    DataWriter.saveResultsTable(rtSkel, outputData, true, true);
+                } catch (IOException e) {
+                    GenUtils.logError(e, "Could not save results file.");
+                }
+
+                rtSkel.reset();
+                ArrayList<Point> ends = skelResult.getListOfEndPoints();
+                row = 0;
+                for (Point p : ends) {
+                    rtSkel.setValue("X", row, p.x);
+                    rtSkel.setValue("Y", row, p.y);
+                    rtSkel.setValue("Z", row, p.z);
+                    row++;
+                }
+                try {
+                    File outputData = new File(String.format("%s%s%s_skeleton_ends_results.csv", binOutDir, File.separator, regionsName));
+                    if (outputData.exists() && !outputData.delete())
+                        throw new IOException("Cannot delete existing output file.");
+                    DataWriter.saveResultsTable(rtSkel, outputData, true, true);
+                } catch (IOException e) {
+                    GenUtils.logError(e, "Could not save results file.");
+                }
             }
 
             System.out.println("Calculating distance map 1...");
@@ -328,6 +388,7 @@ public class SlideJ {
 //            }
             maps.add(dm2);
             channelNames.add(String.format("%s_InvertedDistanceMap", regionsName));
+
         }
         return;
     }
