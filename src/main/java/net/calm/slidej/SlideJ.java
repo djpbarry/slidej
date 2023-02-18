@@ -24,7 +24,6 @@
 
 package net.calm.slidej;
 
-import ij.IJ;
 import ij.ImagePlus;
 import ij.measure.ResultsTable;
 import io.scif.ImageMetadata;
@@ -41,7 +40,6 @@ import net.calm.slidej.io.ImageLoader;
 import net.calm.slidej.properties.SlideJParams;
 import net.calm.slidej.segmentation.ImageThresholder;
 import net.calm.slidej.transform.DistanceTransformer;
-import net.imagej.ImageJ;
 import net.imagej.axis.AxisType;
 import net.imagej.axis.CalibratedAxis;
 import net.imagej.axis.DefaultAxisType;
@@ -55,7 +53,6 @@ import net.imglib2.algorithm.morphology.StructuringElements;
 import net.imglib2.algorithm.morphology.TopHat;
 import net.imglib2.cache.img.DiskCachedCellImgFactory;
 import net.imglib2.img.Img;
-import net.imglib2.img.ImgView;
 import net.imglib2.img.array.ArrayImgFactory;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.roi.labeling.ImgLabeling;
@@ -67,14 +64,12 @@ import net.imglib2.type.logic.BitType;
 import net.imglib2.type.logic.BoolType;
 import net.imglib2.type.numeric.NumericType;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.integer.UnsignedByteType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Util;
 import net.imglib2.view.Views;
 import org.apache.commons.io.FileUtils;
 import sc.fiji.analyzeSkeleton.AnalyzeSkeleton_;
-import sc.fiji.analyzeSkeleton.Graph;
 import sc.fiji.analyzeSkeleton.Point;
 import sc.fiji.analyzeSkeleton.SkeletonResult;
 import sc.fiji.skeletonize3D.Skeletonize3D_;
@@ -117,7 +112,7 @@ public class SlideJ {
         System.out.println(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
 
         ImageLoader<UnsignedShortType> il = new ImageLoader<>();
-        Img<UnsignedShortType> img = il.load(file, series);
+        Img<UnsignedShortType> img = il.load(file, series, new UnsignedShortType());
         ImageMetadata meta = il.getMeta();
         OMEMetadata omeMeta = il.getOmeMeta();
 
@@ -212,7 +207,7 @@ public class SlideJ {
 //        System.out.println("Loading aux channels and concatanating datset...");
 
         ImageLoader<FloatType> ilFloat = new ImageLoader<>();
-        Img<FloatType> imgFloat = ilFloat.load(file, series);
+        Img<FloatType> imgFloat = ilFloat.load(file, series, new FloatType());
 
         RandomAccessibleInterval<FloatType> concat = Views.concatenate(axisOrder[SlideJParams.C_AXIS], imgFloat, auxs);
 
