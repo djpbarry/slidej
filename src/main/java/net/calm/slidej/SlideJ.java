@@ -51,9 +51,9 @@ import net.imglib2.algorithm.gauss3.Gauss3;
 import net.imglib2.algorithm.labeling.ConnectedComponents;
 import net.imglib2.algorithm.morphology.StructuringElements;
 import net.imglib2.algorithm.morphology.TopHat;
-import net.imglib2.cache.img.DiskCachedCellImgFactory;
 import net.imglib2.img.Img;
-import net.imglib2.img.array.ArrayImgFactory;
+import net.imglib2.img.ImgView;
+import net.imglib2.img.cell.CellImgFactory;
 import net.imglib2.img.display.imagej.ImageJFunctions;
 import net.imglib2.roi.labeling.ImgLabeling;
 import net.imglib2.roi.labeling.LabelRegion;
@@ -130,13 +130,17 @@ public class SlideJ {
 
         System.out.println("Calibrating...");
 
+        if (img.numDimensions() < 4) {
+            img = ImgView.wrap(Views.addDimension(img, 0, 0));
+        }
+
         int[] calNeighbourhood = new int[img.numDimensions()];
         double[] calibrations = new double[img.numDimensions()];
         int[] axisOrder = new int[SlideJParams.N_AXIS];
         Arrays.fill(axisOrder, -1);
         String[] dimLabels = new String[img.numDimensions()];
 
-        for (int i = 0; i < calNeighbourhood.length; i++) {
+        for (int i = 0; i < axes.size(); i++) {
             CalibratedAxis axis = axes.get(i);
             AxisType type = axis.type();
             if (axis instanceof DefaultLinearAxis) {
@@ -156,6 +160,11 @@ public class SlideJ {
             } else if (dimLabels[i].equalsIgnoreCase("Y")) {
                 axisOrder[SlideJParams.Y_AXIS] = i;
             }
+        }
+
+        if (axisOrder[SlideJParams.C_AXIS] < 0) {
+            axisOrder[SlideJParams.C_AXIS] = axes.size();
+            dimLabels[axes.size()] = "Channel";
         }
 
         calNeighbourhood[axisOrder[SlideJParams.C_AXIS]] = 1;
@@ -208,6 +217,10 @@ public class SlideJ {
 
         ImageLoader<FloatType> ilFloat = new ImageLoader<>();
         Img<FloatType> imgFloat = ilFloat.load(file, series, new FloatType());
+
+        if (imgFloat.numDimensions() < 4) {
+            imgFloat = ImgView.wrap(Views.addDimension(imgFloat, 0, 0));
+        }
 
         RandomAccessibleInterval<FloatType> concat = Views.concatenate(axisOrder[SlideJParams.C_AXIS], imgFloat, auxs);
 
@@ -274,7 +287,7 @@ public class SlideJ {
             RandomAccessibleInterval<UnsignedShortType> channel = Views.hyperSlice(img, caxis, c);
 
             System.out.println("Filtering...");
-            Img<UnsignedShortType> filtered = (new ArrayImgFactory<>(new UnsignedShortType())).create(channel);
+            Img<UnsignedShortType> filtered = (new CellImgFactory<>(new UnsignedShortType(), 100)).create(channel);
             Gauss3.gauss(getSigma(channel.numDimensions(), c, channelCals), Views.extendValue(channel, img.firstElement().createVariable()), filtered);
 
             if (Boolean.parseBoolean(props.getStepProperty(SlideJParams.TOP_HAT, s, SlideJParams.DEFAULT_TH_CHANNEL))) {
@@ -296,7 +309,7 @@ public class SlideJ {
             Img<BitType> binary = thresholdImg(filtered, props.getStepProperty(SlideJParams.THRESHOLD, s, SlideJParams.DEFAULT_THRESHOLD_METHOD));
 
             System.out.println("Labelling connected components...");
-            Img<UnsignedShortType> labelled = (new DiskCachedCellImgFactory<>(new UnsignedShortType())).create(binary);
+            Img<UnsignedShortType> labelled = (new CellImgFactory<>(new UnsignedShortType(), 100)).create(binary);
             ConnectedComponents.labelAllConnectedComponents(binary, labelled, ConnectedComponents.StructuringElement.EIGHT_CONNECTED);
             String regionsName = String.format("step_%d_%s", s, channelNames.get(c));
             regions.put(regionsName, getRegionsList(labelled));

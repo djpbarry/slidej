@@ -24,21 +24,19 @@
 
 package net.calm.slidej.convert;
 
-import net.calm.slidej.io.DiskCacheOptions;
-import net.imglib2.cache.img.DiskCachedCellImgFactory;
 import net.imglib2.img.Img;
+import net.imglib2.img.cell.CellImgFactory;
 import net.imglib2.loops.LoopBuilder;
 import net.imglib2.type.BooleanType;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
-import net.imglib2.type.numeric.integer.UnsignedShortType;
 
 import java.nio.file.Path;
 
 public class ConvertBinary {
     public static <B extends BooleanType<B>> Img<UnsignedByteType> convertBinary(Img<B> input, Path tmpDir) {
 
-        Img<UnsignedByteType> converted = (new DiskCachedCellImgFactory<>(new UnsignedByteType(), new DiskCacheOptions(tmpDir).getOptions())).create(input);
+        Img<UnsignedByteType> converted = (new CellImgFactory<>(new UnsignedByteType(), 100)).create(input);
 
         BitType a = new BitType();
         BitType b = new BitType();

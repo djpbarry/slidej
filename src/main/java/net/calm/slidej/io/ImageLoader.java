@@ -38,8 +38,10 @@ import io.scif.services.DatasetIOService;
 import net.imagej.ImageJ;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
+import net.imglib2.img.cell.CellImgFactory;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
+import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.view.Views;
 
 import java.io.File;
@@ -69,7 +71,7 @@ public class ImageLoader<T extends RealType<T>> {
         net.imagej.Dataset data = null;
 
         try {
-            data = scifio.datasetIO().open(file.getAbsolutePath());
+            data = scifio.datasetIO().open(file.getAbsolutePath(), config);
             Metadata globalMeta = (Metadata) data.getProperties().get("scifio.metadata.global");
             Object imageMeta = data.getProperties().get("scifio.metadata.image");
             omeMeta = new OMEMetadata((new ImageJ()).getContext());
@@ -79,12 +81,14 @@ public class ImageLoader<T extends RealType<T>> {
         }
 
         SCIFIOImgPlus<?> sciImg = new ImgOpener().openImgs(file.getAbsolutePath(), config).get(0);
+        //Img<T> img = (new ImgOpener()).openImg(file.getAbsolutePath(), new CellImgFactory<T>(100), t);
         this.meta = sciImg.getImageMetadata();
 
         if (data.getType().createVariable() instanceof UnsignedByteType) {
-            return (Img<T>) imagej.op().convert().uint16(data.typedImg(new UnsignedByteType()));
+            return (Img<T>) imagej.op().convert().uint16((new CellImgFactory<>(new UnsignedShortType())).create(sciImg.getImg()),
+                    (Img<T>) sciImg.getImg());
         } else {
-            return (Img<T>) (data.typedImg(t.createVariable()));
+            return (Img<T>) sciImg.getImg();
         }
     }
 
