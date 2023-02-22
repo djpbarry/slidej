@@ -25,6 +25,7 @@
 package net.calm.slidej.transform;
 
 import net.calm.slidej.binary.Inverter;
+import net.calm.slidej.properties.SlideJParams;
 import net.imagej.ImageJ;
 import net.imagej.ops.OpService;
 import net.imglib2.algorithm.morphology.distance.DistanceTransform;
@@ -39,7 +40,7 @@ public class DistanceTransformer {
 
     public static Img<FloatType> calcDistanceMap(Img<BitType> binary, double[] cals, Path tmpDir, boolean inverted) {
         OpService os = (new ImageJ()).op();
-        Img<FloatType> output = (new CellImgFactory<>(new FloatType(), 100)).create(binary);
+        Img<FloatType> output = (new CellImgFactory<>(new FloatType(), SlideJParams.CELL_IMG_DIM)).create(binary);
 
         if (!inverted) {
             //return ImgView.wrap(os.image().distancetransform(output, binary, cals), output.factory());

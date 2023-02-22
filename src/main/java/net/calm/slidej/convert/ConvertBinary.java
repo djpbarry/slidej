@@ -24,6 +24,7 @@
 
 package net.calm.slidej.convert;
 
+import net.calm.slidej.properties.SlideJParams;
 import net.imglib2.img.Img;
 import net.imglib2.img.cell.CellImgFactory;
 import net.imglib2.loops.LoopBuilder;
@@ -36,7 +37,7 @@ import java.nio.file.Path;
 public class ConvertBinary {
     public static <B extends BooleanType<B>> Img<UnsignedByteType> convertBinary(Img<B> input, Path tmpDir) {
 
-        Img<UnsignedByteType> converted = (new CellImgFactory<>(new UnsignedByteType(), 100)).create(input);
+        Img<UnsignedByteType> converted = (new CellImgFactory<>(new UnsignedByteType(), SlideJParams.CELL_IMG_DIM)).create(input);
 
         BitType a = new BitType();
         BitType b = new BitType();

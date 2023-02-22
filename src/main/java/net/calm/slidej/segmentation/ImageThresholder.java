@@ -25,6 +25,7 @@
 package net.calm.slidej.segmentation;
 
 import ij.process.AutoThresholder;
+import net.calm.slidej.properties.SlideJParams;
 import net.imglib2.algorithm.stats.ComputeMinMax;
 import net.imglib2.algorithm.stats.Histogram;
 import net.imglib2.algorithm.stats.RealBinMapper;
@@ -44,7 +45,7 @@ public class ImageThresholder {
     public ImageThresholder(final Img<UnsignedShortType> input, Path tmpDir, final String method) {
         this.input = input;
         this.method = method;
-        this.output = (new CellImgFactory<>(new BitType(), 100)).create(input);
+        this.output = (new CellImgFactory<>(new BitType(), SlideJParams.CELL_IMG_DIM)).create(input);
     }
 
     public void threshold() {

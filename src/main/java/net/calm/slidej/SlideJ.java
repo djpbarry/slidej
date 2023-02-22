@@ -287,7 +287,7 @@ public class SlideJ {
             RandomAccessibleInterval<UnsignedShortType> channel = Views.hyperSlice(img, caxis, c);
 
             System.out.println("Filtering...");
-            Img<UnsignedShortType> filtered = (new CellImgFactory<>(new UnsignedShortType(), 100)).create(channel);
+            Img<UnsignedShortType> filtered = (new CellImgFactory<>(new UnsignedShortType(), SlideJParams.CELL_IMG_DIM)).create(channel);
             Gauss3.gauss(getSigma(channel.numDimensions(), c, channelCals), Views.extendValue(channel, img.firstElement().createVariable()), filtered);
 
             if (Boolean.parseBoolean(props.getStepProperty(SlideJParams.TOP_HAT, s, SlideJParams.DEFAULT_TH_CHANNEL))) {
@@ -309,7 +309,7 @@ public class SlideJ {
             Img<BitType> binary = thresholdImg(filtered, props.getStepProperty(SlideJParams.THRESHOLD, s, SlideJParams.DEFAULT_THRESHOLD_METHOD));
 
             System.out.println("Labelling connected components...");
-            Img<UnsignedShortType> labelled = (new CellImgFactory<>(new UnsignedShortType(), 100)).create(binary);
+            Img<UnsignedShortType> labelled = (new CellImgFactory<>(new UnsignedShortType(), SlideJParams.CELL_IMG_DIM)).create(binary);
             ConnectedComponents.labelAllConnectedComponents(binary, labelled, ConnectedComponents.StructuringElement.EIGHT_CONNECTED);
             String regionsName = String.format("step_%d_%s", s, channelNames.get(c));
             regions.put(regionsName, getRegionsList(labelled));

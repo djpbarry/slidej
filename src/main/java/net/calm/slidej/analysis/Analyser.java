@@ -65,7 +65,7 @@ public class Analyser<T extends RealType<T>> {
 
         if (coloc) {
 
-            final ImgFactory<FloatType> imgFactory = new CellImgFactory<>(new FloatType());
+            final ImgFactory<FloatType> imgFactory = new CellImgFactory<>(new FloatType(), SlideJParams.CELL_IMG_DIM);
 
             outputs = new Img[2][(((int) dims[dimOrder[SlideJParams.C_AXIS]] - 1) * (int) dims[dimOrder[SlideJParams.C_AXIS]]) / 2];
 

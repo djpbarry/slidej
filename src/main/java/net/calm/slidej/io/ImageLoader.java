@@ -35,6 +35,7 @@ import io.scif.img.ImgOpener;
 import io.scif.img.SCIFIOImgPlus;
 import io.scif.ome.OMEMetadata;
 import io.scif.services.DatasetIOService;
+import net.calm.slidej.properties.SlideJParams;
 import net.imagej.ImageJ;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
@@ -85,7 +86,7 @@ public class ImageLoader<T extends RealType<T>> {
         this.meta = sciImg.getImageMetadata();
 
         if (data.getType().createVariable() instanceof UnsignedByteType) {
-            return (Img<T>) imagej.op().convert().uint16((new CellImgFactory<>(new UnsignedShortType())).create(sciImg.getImg()),
+            return (Img<T>) imagej.op().convert().uint16((new CellImgFactory<>(new UnsignedShortType(), SlideJParams.CELL_IMG_DIM)).create(sciImg.getImg()),
                     (Img<T>) sciImg.getImg());
         } else {
             return (Img<T>) sciImg.getImg();
