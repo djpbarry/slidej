@@ -41,10 +41,10 @@ public class Main {
         System.out.println(SlideJParams.TITLE);
         System.out.println(TimeAndDate.getCurrentTimeAndDate());
 
-        File file = new File("E:/Dropbox (The Francis Crick)/Debugging/SlideJ/inputs/AC 2022 064_Spleen_ Week24_M1_2_6 Block 2 Block 1_Stitch.ome.tiff");
-        File props = new File("E:/Dropbox (The Francis Crick)/Debugging/SlideJ/props/step_properties.xml");
+        File file = new File("E:/Dropbox (The Francis Crick)/Debugging/BrainSaw/inputs/C1-section_20_Probabilities_crop.ome.tiff");
+        File props = new File("E:/Dropbox (The Francis Crick)/Debugging/BrainSaw/props/step_properties_ilastik.xml");
         Path tmpDir = Paths.get("C:/cache");
-        int neighbourhoodSize = 10;
+        int neighbourhoodSize = 512;
         int series = 0;
 
         try {
