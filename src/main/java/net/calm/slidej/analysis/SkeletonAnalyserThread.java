@@ -28,6 +28,7 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.measure.ResultsTable;
 import net.calm.slidej.io.ImageSaver;
+import net.calm.slidej.util.Utils;
 import net.imglib2.Interval;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.ImgView;
@@ -103,7 +104,7 @@ class SkeletonAnalyserThread<T extends RealType<T>> extends Thread {
             try {
                 FileUtils.delete(new File(tmpFileName));
             } catch (IOException e) {
-                System.out.println("Could not delete temporary file.");
+                Utils.timeStampOutput("Could not delete temporary file.");
             }
         }
     }

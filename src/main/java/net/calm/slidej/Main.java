@@ -27,6 +27,7 @@ package net.calm.slidej;
 import net.calm.iaclasslibrary.TimeAndDate.TimeAndDate;
 import net.calm.iaclasslibrary.UtilClasses.GenUtils;
 import net.calm.slidej.properties.SlideJParams;
+import net.calm.slidej.util.Utils;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -38,8 +39,7 @@ public class Main {
 
         System.setProperty("java.awt.headless", "true");
 
-        System.out.println(SlideJParams.TITLE);
-        System.out.println(TimeAndDate.getCurrentTimeAndDate());
+        Utils.timeStampOutput(SlideJParams.TITLE);
 
         File file = new File("E:/Dropbox (The Francis Crick)/Debugging/BrainSaw/inputs/C1-section_20_Probabilities_crop.ome.tiff");
         File props = new File("E:/Dropbox (The Francis Crick)/Debugging/BrainSaw/props/step_properties_ilastik.xml");
@@ -78,13 +78,13 @@ public class Main {
         if (file == null)
             System.exit(0);
 
-        System.out.println(String.format("Input: %s", file.getAbsolutePath()));
+        Utils.timeStampOutput(String.format("Input: %s", file.getAbsolutePath()));
 
         SlideJ s = new SlideJ(props, tmpDir);
 
         s.load(file, series, neighbourhoodSize);
 
-        System.out.println(String.format("Done: %s", TimeAndDate.getCurrentTimeAndDate()));
+        Utils.timeStampOutput("Done");
 
         System.exit(0);
 
