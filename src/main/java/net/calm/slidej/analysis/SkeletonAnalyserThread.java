@@ -98,8 +98,8 @@ class SkeletonAnalyserThread<T extends RealType<T>> extends Thread {
                 rt.setLabel("End", row);
                 row++;
             }
-            System.out.printf("Thread %d: %.1f%% done.\n", Thread.currentThread().getId(),
-                    (100.0 * ++index / cells.size()));
+            Utils.timeStampOutput(String.format("Thread %d: %.1f%% done.\n", Thread.currentThread().getId(),
+                    (100.0 * ++index / cells.size())));
             skelImp.close();
             try {
                 FileUtils.delete(new File(tmpFileName));

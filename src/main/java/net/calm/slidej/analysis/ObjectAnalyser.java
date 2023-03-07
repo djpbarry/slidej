@@ -25,6 +25,7 @@
 package net.calm.slidej.analysis;
 
 import ij.measure.ResultsTable;
+import net.calm.slidej.util.Utils;
 import net.imagej.ImageJ;
 import net.imagej.ops.stats.StatsNamespace;
 import net.imglib2.RandomAccessibleInterval;
@@ -79,7 +80,7 @@ public class ObjectAnalyser<T extends RealType<T>> {
                 if (ats[thread] != null) ats[thread].join();
             }
         } catch (InterruptedException ie) {
-            System.out.println(String.format("Thread %d was interrupted:\n %s", Thread.currentThread().getId(), ie));
+            Utils.timeStampOutput(String.format("Thread %d was interrupted:\n %s", Thread.currentThread().getId(), ie));
         }
 
     }
