@@ -36,7 +36,9 @@ import net.calm.iaclasslibrary.TimeAndDate.TimeAndDate;
 import net.calm.iaclasslibrary.UtilClasses.GenUtils;
 import net.calm.slidej.analysis.Analyser;
 import net.calm.slidej.analysis.ObjectAnalyser;
+import net.calm.slidej.analysis.SkeletonAnalyser;
 import net.calm.slidej.io.ImageLoader;
+import net.calm.slidej.io.ImageSaver;
 import net.calm.slidej.properties.SlideJParams;
 import net.calm.slidej.segmentation.ImageThresholder;
 import net.calm.slidej.transform.DistanceTransformer;
@@ -64,15 +66,11 @@ import net.imglib2.type.NativeType;
 import net.imglib2.type.logic.BitType;
 import net.imglib2.type.logic.BoolType;
 import net.imglib2.type.numeric.NumericType;
-import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedShortType;
 import net.imglib2.type.numeric.real.FloatType;
 import net.imglib2.util.Util;
 import net.imglib2.view.Views;
 import org.apache.commons.io.FileUtils;
-import sc.fiji.analyzeSkeleton.AnalyzeSkeleton_;
-import sc.fiji.analyzeSkeleton.Point;
-import sc.fiji.analyzeSkeleton.SkeletonResult;
 import sc.fiji.skeletonize3D.Skeletonize3D_;
 
 import java.io.File;
@@ -202,7 +200,8 @@ public class SlideJ {
 //                binaryOutputs,
 //                mapOutputs,
 //                caxis, calibrations);
-        generateDistanceMaps(img, mapOutputs, binaryOutputs, axisOrder[SlideJParams.C_AXIS], calibrations);
+        generateDistanceMaps(img, mapOutputs, binaryOutputs, axisOrder[SlideJParams.C_AXIS], calibrations, file,
+                calNeighbourhood, axisOrder);
 
         Utils.timeStampOutput("Concatenating distance maps...");
 //
@@ -239,7 +238,7 @@ public class SlideJ {
             if (outputData.exists() && !outputData.delete())
                 throw new IOException("Cannot delete existing output file.");
             for (int i = 0; i < rt.length; i++) {
-                DataWriter.saveResultsTable(rt[i], outputData, true, i == 0);
+                if (rt[i] != null) DataWriter.saveResultsTable(rt[i], outputData, true, i == 0);
             }
         } catch (IOException e) {
             GenUtils.logError(e, "Could not save results file.");
@@ -256,8 +255,8 @@ public class SlideJ {
             int index = 0;
             for (int chan = 0; chan < img.dimension(axisOrder[SlideJParams.C_AXIS]) - 1; chan++) {
                 for (int chan2 = chan + 1; chan2 < img.dimension(axisOrder[SlideJParams.C_AXIS]); chan2++) {
-                    saveImage(String.format("%s%sPC_%d_%d.ome.tiff", props.getProperty(SlideJParams.OUTPUT), File.separator, chan, chan2), outputs[0][index]);
-                    saveImage(String.format("%s%sSC_%d_%d.ome.tiff", props.getProperty(SlideJParams.OUTPUT), File.separator, chan, chan2), outputs[1][index]);
+                    ImageSaver.saveImage(String.format("%s%sPC_%d_%d.ome.tiff", props.getProperty(SlideJParams.OUTPUT), File.separator, chan, chan2), outputs[0][index]);
+                    ImageSaver.saveImage(String.format("%s%sSC_%d_%d.ome.tiff", props.getProperty(SlideJParams.OUTPUT), File.separator, chan, chan2), outputs[1][index]);
                     index++;
                 }
             }
@@ -268,7 +267,7 @@ public class SlideJ {
 
     private void generateDistanceMaps(Img<UnsignedShortType> img,
                                       String mapOutDir, String binOutDir,
-                                      int caxis, double[] calibrations) {
+                                      int caxis, double[] calibrations, File file, int[] calNeighbourhood, int[] axisOrder) {
         long[] dims = new long[img.numDimensions()];
         img.dimensions(dims);
 
@@ -340,48 +339,11 @@ public class SlideJ {
                 Utils.timeStampOutput("Saving...");
                 String skel_filename = String.format("%s%sSkeleton_%s%s", binOutDir, File.separator, regionsName, SlideJParams.OUTPUT_FILE_EXT);
                 saver.saveImg(skel_filename, ImageJFunctions.wrap(skelImp), config);
-                Utils.timeStampOutput("Done...");
-                Utils.timeStampOutput("Analysing Skeleton...");
-                AnalyzeSkeleton_ analyser = new AnalyzeSkeleton_();
-                analyser.setup("", skelImp);
-                SkeletonResult skelResult = analyser.run(AnalyzeSkeleton_.NONE, false, false, null, true, true);
-                Utils.timeStampOutput("Done");
-                Utils.timeStampOutput("Saving Results of Skeleton Analysis...");
-                ResultsTable rtSkel = new ResultsTable();
-                ArrayList<Point> junctions = skelResult.getListOfJunctionVoxels();
-                int row = 0;
-                for (Point p : junctions) {
-                    rtSkel.setValue("X", row, p.x);
-                    rtSkel.setValue("Y", row, p.y);
-                    rtSkel.setValue("Z", row, p.z);
-                    row++;
-                }
-                try {
-                    File outputData = new File(String.format("%s%s%s_skeleton_junction_results.csv", binOutDir, File.separator, regionsName));
-                    if (outputData.exists() && !outputData.delete())
-                        throw new IOException("Cannot delete existing output file.");
-                    DataWriter.saveResultsTable(rtSkel, outputData, true, true);
-                } catch (IOException e) {
-                    GenUtils.logError(e, "Could not save results file.");
-                }
-
-                rtSkel.reset();
-                ArrayList<Point> ends = skelResult.getListOfEndPoints();
-                row = 0;
-                for (Point p : ends) {
-                    rtSkel.setValue("X", row, p.x);
-                    rtSkel.setValue("Y", row, p.y);
-                    rtSkel.setValue("Z", row, p.z);
-                    row++;
-                }
-                try {
-                    File outputData = new File(String.format("%s%s%s_skeleton_ends_results.csv", binOutDir, File.separator, regionsName));
-                    if (outputData.exists() && !outputData.delete())
-                        throw new IOException("Cannot delete existing output file.");
-                    DataWriter.saveResultsTable(rtSkel, outputData, true, true);
-                } catch (IOException e) {
-                    GenUtils.logError(e, "Could not save results file.");
-                }
+                analyseSkeleton(ImageJFunctions.wrap(skelImp), file, c, new int[]{
+                                calNeighbourhood[axisOrder[SlideJParams.X_AXIS]],
+                                calNeighbourhood[axisOrder[SlideJParams.Y_AXIS]],
+                                calNeighbourhood[axisOrder[SlideJParams.Z_AXIS]]},
+                        regionsName);
             }
             Utils.timeStampOutput("Done.");
 
@@ -416,14 +378,6 @@ public class SlideJ {
 
     public <T extends NumericType<T> & NativeType<T>> void showImage(RandomAccessibleInterval<T> img) {
         // ImageJFunctions.show(img);
-    }
-
-    private <T extends RealType> void saveImage(String path, Img<T> img) {
-        SCIFIOConfig config = new SCIFIOConfig();
-        config.writerSetCompression("LZW");
-        //config.parserSetSaveOriginalMetadata(true);
-
-        (new ImgSaver()).saveImg(path, img, config);
     }
 
     private ArrayList<String> makeOutputDirectories(File parent, String... children) {
@@ -528,12 +482,8 @@ public class SlideJ {
     void analyseObjects(ArrayList<RandomAccessibleInterval<BoolType>> regions, RandomAccessibleInterval<FloatType> img,
                         double[] calibrations, int[] axisOrder, String[] dimLabels, File file, String channel) {
         ObjectAnalyser<FloatType> a = new ObjectAnalyser<>(dimLabels, calibrations, axisOrder, channelNames);
-
-//        Utils.timeStampOutput("Loading aux channels and concatanating datset...");
-
-        Utils.timeStampOutput("Done.");
         Utils.timeStampOutput(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
-        Utils.timeStampOutput("Analysing intensities in all channels...");
+        Utils.timeStampOutput("Analysing objects...");
 
         a.analyse(img, regions);
 
@@ -542,6 +492,33 @@ public class SlideJ {
         try {
             ResultsTable[] rt = a.getRt();
             File outputData = new File(String.format("%s%s%s_%s_object_results.csv", props.getProperty(SlideJParams.OUTPUT),
+                    File.separator, file.getName(), channel));
+            if (outputData.exists() && !outputData.delete())
+                throw new IOException("Cannot delete existing output file.");
+            for (int i = 0; i < rt.length; i++) {
+                if (rt[i] != null) DataWriter.saveResultsTable(rt[i], outputData, true, i == 0);
+            }
+        } catch (IOException e) {
+            GenUtils.logError(e, "Could not save results file.");
+        }
+    }
+
+    void analyseSkeleton(Img<UnsignedShortType> img, File file, int channel, int[] calNeighbourhood,
+                         String regionsName) {
+        long[] imgDims = img.dimensionsAsLongArray();
+        for (int i = 0; i < imgDims.length; i++) {
+            if (calNeighbourhood[i] > imgDims[i]) {
+                calNeighbourhood[i] = (int) imgDims[i];
+            }
+        }
+        SkeletonAnalyser<UnsignedShortType> a = new SkeletonAnalyser(calNeighbourhood, regionsName, tmpDir.toFile().getAbsolutePath());
+        Utils.timeStampOutput(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
+        Utils.timeStampOutput("Analysing skeleton...");
+        a.analyse(img);
+        Utils.timeStampOutput("Saving results...");
+        try {
+            ResultsTable[] rt = a.getRt();
+            File outputData = new File(String.format("%s%s%s_%d_skeleton_results.csv", props.getProperty(SlideJParams.OUTPUT),
                     File.separator, file.getName(), channel));
             if (outputData.exists() && !outputData.delete())
                 throw new IOException("Cannot delete existing output file.");

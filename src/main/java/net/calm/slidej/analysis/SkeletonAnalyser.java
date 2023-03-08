@@ -26,54 +26,45 @@ package net.calm.slidej.analysis;
 
 import ij.measure.ResultsTable;
 import net.calm.slidej.util.Utils;
-import net.imagej.ImageJ;
-import net.imagej.ops.stats.StatsNamespace;
+import net.imglib2.Interval;
 import net.imglib2.RandomAccessibleInterval;
-import net.imglib2.img.Img;
-import net.imglib2.type.logic.BoolType;
+import net.imglib2.algorithm.util.Grids;
 import net.imglib2.type.numeric.RealType;
-import net.imglib2.type.numeric.real.FloatType;
+import net.imglib2.util.Pair;
 
-import java.util.ArrayList;
+import java.util.List;
 
-public class ObjectAnalyser<T extends RealType<T>> {
-    private final String[] dimLabels;
-    private final double[] calibrations;
+public class SkeletonAnalyser<T extends RealType<T>> {
+    private final int[] neighbourhoodSize;
     private ResultsTable[] rt;
-    private final int[] dimOrder;
-    private final ArrayList<String> channelNames;
+    private final String regionsName;
+    private final String tmpDir;
 
-    public ObjectAnalyser(String[] dimLabels, double[] calibrations, int[] dimOrder, ArrayList<String> channelNames) {
-        this.dimLabels = dimLabels;
-        this.calibrations = calibrations;
-        this.dimOrder = dimOrder;
-        this.channelNames = channelNames;
+    public SkeletonAnalyser(int[] neighbourhoodSize, final String regionsName, final String tmpDir) {
+        this.neighbourhoodSize = neighbourhoodSize;
+        this.regionsName = regionsName;
+        this.tmpDir = tmpDir;
     }
 
-    public void analyse(RandomAccessibleInterval<T> img, ArrayList<RandomAccessibleInterval<BoolType>> regions) {
-
+    public void analyse(RandomAccessibleInterval<T> img) {
         long[] dims = new long[img.numDimensions()];
-
         img.dimensions(dims);
-
+        List<Pair<Interval, long[]>> cells = Grids.collectAllContainedIntervalsWithGridPositions(dims, neighbourhoodSize);
         int nbCPUs = Runtime.getRuntime().availableProcessors();
-
-        int nThreads = Math.min(nbCPUs, regions.size());
-
+        int nThreads = Math.min(nbCPUs, cells.size());
+        float nCellsPerThread = ((float) cells.size()) / nThreads;
         rt = new ResultsTable[nThreads];
-
         Thread[] ats = new Thread[nThreads];
-
-        int nCellsPerThread = (int) Math.ceil((float) regions.size() / nThreads);
-        StatsNamespace stats = new ImageJ().op().stats();
-        int startIndex = 0;
-        for (int thread = 0; thread < nThreads && startIndex < regions.size(); thread++) {
+        int startIndex;
+        int endIndex = 0;
+        for (int thread = 0; thread < nThreads; thread++) {
             rt[thread] = new ResultsTable();
-            int endIndex = Math.min(startIndex + nCellsPerThread, regions.size() - 1);
-            ats[thread] = new ObjectAnalyserThread<T>(regions.subList(startIndex, endIndex), img,
-                    rt[thread], dimLabels, dimOrder, calibrations, stats, channelNames);
+            startIndex = endIndex;
+            if (startIndex >= cells.size()) break;
+            endIndex = Math.min(Math.round((thread + 1) * nCellsPerThread), cells.size());
+            ats[thread] = new SkeletonAnalyserThread<>(cells.subList(startIndex, endIndex),
+                    img, rt[thread], regionsName, tmpDir);
             ats[thread].start();
-            startIndex += nCellsPerThread;
         }
         try {
             for (int thread = 0; thread < nThreads; thread++) {

@@ -26,6 +26,7 @@ package net.calm.slidej.analysis;
 
 import ij.measure.ResultsTable;
 import net.calm.slidej.properties.SlideJParams;
+import net.calm.slidej.util.Utils;
 import net.imagej.ImageJ;
 import net.imagej.ops.stats.StatsNamespace;
 import net.imglib2.Interval;
@@ -81,17 +82,18 @@ public class Analyser<T extends RealType<T>> {
         List<Pair<Interval, long[]>> cells = Grids.collectAllContainedIntervalsWithGridPositions(dims, neighbourhoodSize);
 
         int nbCPUs = Runtime.getRuntime().availableProcessors();
-
-        rt = new ResultsTable[nbCPUs];
-
-        Thread[] ats = new Thread[nbCPUs];
-
-        int nCellsPerThread = (int) Math.ceil((float) cells.size() / nbCPUs);
+        int nThreads = Math.min(nbCPUs, cells.size());
+        float nCellsPerThread = ((float) cells.size()) / nThreads;
+        rt = new ResultsTable[nThreads];
+        Thread[] ats = new Thread[nThreads];
+        int startIndex;
+        int endIndex = 0;
         StatsNamespace stats = new ImageJ().op().stats();
-        for (int thread = 0; thread < nbCPUs; thread++) {
+        for (int thread = 0; thread < nThreads; thread++) {
             rt[thread] = new ResultsTable();
-            int startIndex = thread * nCellsPerThread;
-            int endIndex = Math.min(startIndex + nCellsPerThread, cells.size());
+            startIndex = endIndex;
+            if (startIndex >= cells.size()) break;
+            endIndex = Math.min(Math.round((thread + 1) * nCellsPerThread), cells.size());
             if (!coloc) {
                 ats[thread] = new AnalyserThread<T>(cells.subList(startIndex, endIndex), img, neighbourhoodSize,
                         rt[thread], dimLabels, calibrations, stats);
@@ -102,11 +104,11 @@ public class Analyser<T extends RealType<T>> {
             ats[thread].start();
         }
         try {
-            for (int thread = 0; thread < nbCPUs; thread++) {
-                ats[thread].join();
+            for (int thread = 0; thread < nThreads; thread++) {
+                if (ats[thread] != null) ats[thread].join();
             }
         } catch (InterruptedException ie) {
-            System.out.println(String.format("Thread %d was interrupted:\n %s", Thread.currentThread().getId(), ie));
+            Utils.timeStampOutput(String.format("Thread %d was interrupted:\n %s", Thread.currentThread().getId(), ie));
         }
 
     }
