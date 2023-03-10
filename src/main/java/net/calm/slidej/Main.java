@@ -37,11 +37,8 @@ public class Main {
     public static void main(String[] args) {
 
         System.setProperty("java.awt.headless", "true");
-
-        Utils.timeStampOutput(SlideJParams.TITLE);
-
-        File file = new File("E:/Dropbox (The Francis Crick)/Debugging/BrainSaw/inputs/C1-section_20_Probabilities_crop.ome.tiff");
-        File props = new File("E:/Dropbox (The Francis Crick)/Debugging/BrainSaw/props/step_properties_ilastik.xml");
+        File file = new File("D:/Dropbox (The Francis Crick)/Debugging/BrainSaw/inputs/C1-section_20_Probabilities_crop.ome.tiff");
+        File props = new File("D:/Dropbox (The Francis Crick)/Debugging/BrainSaw/props/step_properties_ilastik.xml");
         Path tmpDir = Paths.get("C:/cache");
         int neighbourhoodSize = 512;
         int series = 0;

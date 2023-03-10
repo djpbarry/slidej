@@ -30,6 +30,7 @@ import io.scif.ImageMetadata;
 import io.scif.config.SCIFIOConfig;
 import io.scif.img.ImgSaver;
 import io.scif.ome.OMEMetadata;
+import loci.common.DebugTools;
 import net.calm.iaclasslibrary.IO.DataWriter;
 import net.calm.iaclasslibrary.IO.PropertyWriter;
 import net.calm.iaclasslibrary.TimeAndDate.TimeAndDate;
@@ -90,7 +91,9 @@ public class SlideJ {
     private final LinkedHashMap<String, ArrayList<RandomAccessibleInterval<BoolType>>> regions = new LinkedHashMap<>();
 
     public SlideJ(File propsLocation, Path tmpDir) {
+        DebugTools.setRootLevel("WARN");
         props = new SlideJParams();
+        Utils.timeStampOutput(String.format("%s %s", SlideJParams.TITLE, props.getVersion()));
         try {
             if (propsLocation != null) {
                 PropertyWriter.loadProperties(props, null, propsLocation);
@@ -410,7 +413,8 @@ public class SlideJ {
 
     private boolean saveAnalysisParameters() {
         try {
-            PropertyWriter.saveProperties(props, props.getProperty(SlideJParams.OUTPUT), SlideJParams.TITLE, true);
+            PropertyWriter.saveProperties(props, props.getProperty(SlideJParams.OUTPUT), String.format("%s %s",
+                    SlideJParams.TITLE, props.getVersion()), true);
         } catch (Exception e) {
             GenUtils.logError(e, "Failed to save property file.");
             return false;

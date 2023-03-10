@@ -24,6 +24,7 @@
 
 package net.calm.slidej.properties;
 
+import java.io.IOException;
 import java.util.Properties;
 
 public class SlideJParams extends Properties {
@@ -34,7 +35,8 @@ public class SlideJParams extends Properties {
     public static final String AUX_INPUT = "Aux input data";
     public static final String BIN_INPUT = "Binary input data";
     public static final String OUTPUT = "Output directory";
-    public static final String TITLE = "SlideJ v1.0.2";
+    public static final String TITLE = "SlideJ";
+    private String version;
     public static final String FILTER_RADIUS = "Filter radius";
     public static final String TH_FILTER_RADIUS = "Top hat filter radius";
     public static final String DEFAULT_FILTER_RADIUS = "2.0";
@@ -59,7 +61,14 @@ public class SlideJParams extends Properties {
     public static final int N_AXIS = 4;
 
     public SlideJParams() {
-
+        try {
+            final Properties properties = new Properties();
+            String cwd = System.getProperty("user.dir");
+            properties.load(this.getClass().getResourceAsStream("../../../../project.properties"));
+            this.version = String.format("v%s", properties.getProperty("version"));
+        } catch (IOException e) {
+            this.version = "v1.0.0";
+        }
     }
 
     public synchronized Object setChannelProperty(String key, String value, int channel) {
@@ -78,5 +87,9 @@ public class SlideJParams extends Properties {
 
     private String getFormattedKey(String key, int channel) {
         return String.format("%s Step %d", key, channel);
+    }
+
+    public String getVersion() {
+        return version;
     }
 }
