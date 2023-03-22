@@ -68,8 +68,8 @@ public class SlideJParams extends Properties {
             String cwd = System.getProperty("user.dir");
             properties.load(this.getClass().getResourceAsStream("../../../../project.properties"));
             this.version = String.format("v%s", properties.getProperty("version"));
-        } catch (IOException e) {
-            this.version = "v1.0.0";
+        } catch (IOException | NullPointerException e) {
+            this.version = "v1.0.3";
         }
     }
 
