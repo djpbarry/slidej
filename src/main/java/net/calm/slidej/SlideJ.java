@@ -104,11 +104,13 @@ public class SlideJ {
         this.tmpDir = tmpDir;
     }
 
-    public void load(File file, int series, int neighbourhoodSize) {
+    public void load(File file, int series, int[] neighbourhoodSize) {
         Utils.timeStampOutput(String.format("%d processors available.", Runtime.getRuntime().availableProcessors()));
 
         props.setProperty(SlideJParams.RAW_INPUT, file.getParent());
-        props.setProperty(SlideJParams.NEIGHBOURHOOD, String.valueOf(neighbourhoodSize));
+        props.setProperty(SlideJParams.NEIGHBOURHOOD_X, String.valueOf(neighbourhoodSize[0]));
+        props.setProperty(SlideJParams.NEIGHBOURHOOD_Y, String.valueOf(neighbourhoodSize[1]));
+        props.setProperty(SlideJParams.NEIGHBOURHOOD_Z, String.valueOf(neighbourhoodSize[2]));
 
         Utils.timeStampOutput(String.format("Loading %s", file.getAbsolutePath()));
         Utils.timeStampOutput(String.format("%.1f GB of RAM free.", Runtime.getRuntime().freeMemory() / 1e+9));
@@ -147,7 +149,6 @@ public class SlideJ {
             AxisType type = axis.type();
             if (axis instanceof DefaultLinearAxis) {
                 ((DefaultLinearAxis) axis).setOrigin(0.0);
-                calNeighbourhood[i] = (int) Math.round(axis.rawValue(neighbourhoodSize));
                 calibrations[i] = ((DefaultLinearAxis) axis).scale();
             }
             if (type instanceof DefaultAxisType) {
@@ -157,10 +158,13 @@ public class SlideJ {
                 axisOrder[SlideJParams.C_AXIS] = i;
             } else if (dimLabels[i].equalsIgnoreCase("Z")) {
                 axisOrder[SlideJParams.Z_AXIS] = i;
+                calNeighbourhood[i] = (int) Math.round(axis.rawValue(neighbourhoodSize[SlideJParams.Z_AXIS]));
             } else if (dimLabels[i].equalsIgnoreCase("X")) {
                 axisOrder[SlideJParams.X_AXIS] = i;
+                calNeighbourhood[i] = (int) Math.round(axis.rawValue(neighbourhoodSize[SlideJParams.X_AXIS]));
             } else if (dimLabels[i].equalsIgnoreCase("Y")) {
                 axisOrder[SlideJParams.Y_AXIS] = i;
+                calNeighbourhood[i] = (int) Math.round(axis.rawValue(neighbourhoodSize[SlideJParams.Y_AXIS]));
             }
         }
 

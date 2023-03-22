@@ -25,7 +25,6 @@
 package net.calm.slidej;
 
 import net.calm.iaclasslibrary.UtilClasses.GenUtils;
-import net.calm.slidej.properties.SlideJParams;
 import net.calm.slidej.utils.Utils;
 
 import java.io.File;
@@ -40,7 +39,7 @@ public class Main {
         File file = new File("D:/Dropbox (The Francis Crick)/Debugging/BrainSaw/inputs/C1-section_20_Probabilities_crop.ome.tiff");
         File props = new File("D:/Dropbox (The Francis Crick)/Debugging/BrainSaw/props/step_properties_ilastik.xml");
         Path tmpDir = Paths.get("C:/cache");
-        int neighbourhoodSize = 512;
+        int[] neighbourhoodSize = new int[]{512, 512, 10};
         int series = 0;
 
         try {
@@ -50,7 +49,11 @@ public class Main {
                         file = new File(args[i + 1]);
                         break;
                     case "-n":
-                        neighbourhoodSize = Integer.parseInt(args[i + 1]);
+                        String[] neighbourhood = args[i + 1].split(",");
+                        neighbourhoodSize = new int[neighbourhood.length];
+                        for (int j = 0; j < neighbourhood.length; j++) {
+                            neighbourhoodSize[j] = Integer.parseInt(neighbourhood[i]);
+                        }
                         break;
                     case "-s":
                         series = Integer.parseInt(args[i + 1]);

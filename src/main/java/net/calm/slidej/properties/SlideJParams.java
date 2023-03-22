@@ -48,7 +48,9 @@ public class SlideJParams extends Properties {
     public static final String DEFAULT_SKEL_CHANNEL = "false";
     public static final String COLOC = "Colocalise";
     public static final String DO_3D = "3D Analysis";
-    public static final String NEIGHBOURHOOD = "Neighbourhood size";
+    public static final String NEIGHBOURHOOD_X = "Neighbourhood size x";
+    public static final String NEIGHBOURHOOD_Y = "Neighbourhood size y";
+    public static final String NEIGHBOURHOOD_Z = "Neighbourhood size z";
     public static final int CELL_SIZE = 1000;
     public static final String OUTPUT_FILE_EXT = ".ome.btf";
     public static final String N_STEPS = "Number of steps";
