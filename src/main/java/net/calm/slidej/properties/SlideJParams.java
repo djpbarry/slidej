@@ -35,6 +35,7 @@ public class SlideJParams extends Properties {
     public static final String AUX_INPUT = "Aux input data";
     public static final String BIN_INPUT = "Binary input data";
     public static final String OUTPUT = "Output directory";
+    public static final String OUTPUT_LOC = "Location for output directories";
     public static final String TITLE = "SlideJ";
     private String version;
     public static final String FILTER_RADIUS = "Filter radius";
@@ -55,7 +56,7 @@ public class SlideJParams extends Properties {
     public static final String OUTPUT_FILE_EXT = ".ome.btf";
     public static final String N_STEPS = "Number of steps";
     public static final String CHANNEL_FOR_STEP = "Channel for";
-    public static final int CELL_IMG_DIM = 1000;
+    public static final int CELL_IMG_DIM = 100;
     public static final int X_AXIS = 0;
     public static final int Y_AXIS = 1;
     public static final int Z_AXIS = 2;

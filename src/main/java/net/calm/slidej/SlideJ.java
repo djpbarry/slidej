@@ -185,7 +185,7 @@ public class SlideJ {
         String mapOutputs = null;
 
         try {
-            output = makeOutputDirectories(new File(file.getParent()), String.format("%s_SlideJ_%s", file.getName(), TimeAndDate.getCurrentTimeAndDate().replace('/', '-').replace(':', '-'))).get(0);
+            output = makeOutputDirectories(new File(props.getProperty(SlideJParams.OUTPUT_LOC)), String.format("%s_SlideJ_%s", file.getName(), TimeAndDate.getCurrentTimeAndDate().replace('/', '-').replace(':', '-'))).get(0);
             Utils.timeStampOutput(String.format("%s created", output));
             ArrayList<String> children = makeOutputDirectories(new File(output), BINARIES, AUX_INPUTS);
             binaryOutputs = children.get(0);
