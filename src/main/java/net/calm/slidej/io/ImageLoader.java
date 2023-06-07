@@ -35,6 +35,7 @@ import io.scif.img.ImgOpener;
 import io.scif.img.SCIFIOImgPlus;
 import io.scif.ome.OMEMetadata;
 import io.scif.services.DatasetIOService;
+import loci.common.DebugTools;
 import net.calm.slidej.properties.SlideJParams;
 import net.imagej.ImageJ;
 import net.imglib2.RandomAccessibleInterval;
@@ -64,6 +65,7 @@ public class ImageLoader<T extends RealType<T>> {
     }
 
     public Img<T> load(File file, int series, T t) {
+        DebugTools.setRootLevel("WARN");
         SCIFIOConfig config = new SCIFIOConfig();
         config.imgOpenerSetIndex(series);
         config.imgOpenerSetImgModes(SCIFIOConfig.ImgMode.CELL);

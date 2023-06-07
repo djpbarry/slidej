@@ -52,7 +52,7 @@ public class Main {
                         String[] neighbourhood = args[i + 1].split(",");
                         neighbourhoodSize = new int[neighbourhood.length];
                         for (int j = 0; j < neighbourhood.length; j++) {
-                            neighbourhoodSize[j] = Integer.parseInt(neighbourhood[i]);
+                            neighbourhoodSize[j] = Integer.parseInt(neighbourhood[j]);
                         }
                         break;
                     case "-s":
@@ -80,6 +80,10 @@ public class Main {
         Utils.timeStampOutput(String.format("Input: %s", file.getAbsolutePath()));
 
         SlideJ s = new SlideJ(props, tmpDir);
+
+        if (neighbourhoodSize.length < 3) {
+            neighbourhoodSize = new int[]{neighbourhoodSize[0], neighbourhoodSize[0], neighbourhoodSize[0]};
+        }
 
         s.load(file, series, neighbourhoodSize);
 
