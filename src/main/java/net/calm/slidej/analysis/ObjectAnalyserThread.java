@@ -26,11 +26,13 @@ package net.calm.slidej.analysis;
 
 import ij.measure.ResultsTable;
 import net.calm.slidej.properties.SlideJParams;
+import net.calm.slidej.utils.Utils;
 import net.imagej.ops.stats.StatsNamespace;
-import net.imglib2.*;
+import net.imglib2.RandomAccess;
+import net.imglib2.RandomAccessibleInterval;
+import net.imglib2.RealLocalizable;
 import net.imglib2.roi.labeling.LabelRegion;
 import net.imglib2.roi.labeling.LabelRegionCursor;
-import net.imglib2.roi.labeling.LabelRegionRandomAccess;
 import net.imglib2.type.logic.BoolType;
 import net.imglib2.type.numeric.RealType;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
@@ -87,7 +89,11 @@ class ObjectAnalyserThread<T extends RealType<T>> extends Thread {
                     while (regionCursor.hasNext()) {
                         regionCursor.localize(regionPos);
                         imageRA.setPosition(new long[]{regionPos[0], regionPos[1], c, regionPos[2]});
-                        stats.addValue(imageRA.get().getRealDouble());
+                        try {
+                            stats.addValue(imageRA.get().getRealDouble());
+                        } catch (ArrayIndexOutOfBoundsException e) {
+                            Utils.timeStampOutput(String.format("Error accessing location (%d, %d, %d, %d)", regionPos[0], regionPos[1], c, regionPos[2]));
+                        }
                         regionCursor.fwd();
                     }
                     rt.setValue(channelNames.get(c) + "_Mean", resultsRow, stats.getMean());
