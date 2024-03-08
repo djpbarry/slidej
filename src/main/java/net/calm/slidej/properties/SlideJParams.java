@@ -29,6 +29,7 @@ import java.util.Properties;
 
 public class SlideJParams extends Properties {
     public static final String THRESHOLD = "Threshold";
+    public static final String MAN_THRESH_VAL = "Manual Threshold";
     public static final String TOP_HAT = "Top hat";
     public static final String SKELETONISE = "Skeletonise";
     public static final String RAW_INPUT = "Raw input data";

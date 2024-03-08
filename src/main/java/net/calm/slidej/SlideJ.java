@@ -313,7 +313,13 @@ public class SlideJ {
 //            for (String method : methods) {
 
             Utils.timeStampOutput(String.format("Applying %s thresholding method...", props.getStepProperty(SlideJParams.THRESHOLD, s, SlideJParams.DEFAULT_THRESHOLD_METHOD)));
-            Img<BitType> binary = thresholdImg(filtered, props.getStepProperty(SlideJParams.THRESHOLD, s, SlideJParams.DEFAULT_THRESHOLD_METHOD));
+            Img<BitType> binary;
+            if (props.getStepProperty(SlideJParams.THRESHOLD, s, SlideJParams.DEFAULT_THRESHOLD_METHOD).equalsIgnoreCase("Manual")) {
+                binary = thresholdImg(filtered, new UnsignedShortType(
+                        Math.round(65535 * Float.parseFloat(
+                                props.getStepProperty(SlideJParams.MAN_THRESH_VAL, s, "1.0")))));
+            } else
+                binary = thresholdImg(filtered, props.getStepProperty(SlideJParams.THRESHOLD, s, SlideJParams.DEFAULT_THRESHOLD_METHOD));
 
             Utils.timeStampOutput("Labelling connected components...");
             Img<UnsignedShortType> labelled = (new CellImgFactory<>(new UnsignedShortType(), SlideJParams.CELL_IMG_DIM)).create(binary);
@@ -379,6 +385,13 @@ public class SlideJ {
     public Img<BitType> thresholdImg(Img<UnsignedShortType> img, String method) {
         ImageThresholder it = new ImageThresholder(img, tmpDir, method);
         it.threshold();
+
+        return it.getOutput();
+    }
+
+    public Img<BitType> thresholdImg(Img<UnsignedShortType> img, UnsignedShortType threshold) {
+        ImageThresholder it = new ImageThresholder(img);
+        it.thresholdImage(threshold);
 
         return it.getOutput();
     }
