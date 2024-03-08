@@ -312,7 +312,7 @@ public class SlideJ {
 //            String[] methods = AutoThresholder.getMethods();
 //            for (String method : methods) {
 
-            Utils.timeStampOutput("Thresholding...");
+            Utils.timeStampOutput(String.format("Applying %s thresholding method...", props.getStepProperty(SlideJParams.THRESHOLD, s, SlideJParams.DEFAULT_THRESHOLD_METHOD)));
             Img<BitType> binary = thresholdImg(filtered, props.getStepProperty(SlideJParams.THRESHOLD, s, SlideJParams.DEFAULT_THRESHOLD_METHOD));
 
             Utils.timeStampOutput("Labelling connected components...");
