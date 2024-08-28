@@ -27,6 +27,7 @@
  */
 package net.calm.slidej.io;
 
+import io.scif.DefaultImageMetadata;
 import io.scif.ImageMetadata;
 import io.scif.Metadata;
 import io.scif.SCIFIO;
@@ -38,8 +39,11 @@ import io.scif.services.DatasetIOService;
 import loci.common.DebugTools;
 import net.calm.slidej.properties.SlideJParams;
 import net.imagej.ImageJ;
+import net.imagej.axis.DefaultAxisType;
+import net.imagej.axis.DefaultLinearAxis;
 import net.imglib2.RandomAccessibleInterval;
 import net.imglib2.img.Img;
+import net.imglib2.img.ImgView;
 import net.imglib2.img.cell.CellImgFactory;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.type.numeric.integer.UnsignedByteType;
@@ -49,11 +53,10 @@ import net.imglib2.view.Views;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
- *
  * @author david.barry@crick.ac.uk
- *
  */
 public class ImageLoader<T extends RealType<T>> {
 
@@ -95,8 +98,9 @@ public class ImageLoader<T extends RealType<T>> {
         }
     }
 
-    public RandomAccessibleInterval<T> loadAndConcatenate(File dir, int concatAxis, T t) {
+    public Img<T> loadAndConcatenate(File dir, int concatAxis, T t) {
         File[] inputs = dir.listFiles();
+        Arrays.sort(inputs);
         ArrayList<RandomAccessibleInterval<T>> imgs = new ArrayList<>();
         DatasetIOService io = (new SCIFIO()).datasetIO();
         for (File f : inputs) {
@@ -105,7 +109,12 @@ public class ImageLoader<T extends RealType<T>> {
             }
         }
         RandomAccessibleInterval<T> concatImgs = Views.concatenate(imgs.get(0).numDimensions() - 1, imgs);
-        return Views.moveAxis(concatImgs, concatImgs.numDimensions() - 1, concatAxis);
+        ImgView.wrap(Views.moveAxis(concatImgs, concatImgs.numDimensions() - 1, concatAxis));
+        this.meta = new DefaultImageMetadata();
+        this.meta.setAxes(new DefaultLinearAxis(new DefaultAxisType("X", true), 1.0),
+                new DefaultLinearAxis(new DefaultAxisType("Y", true), 1.0),
+                new DefaultLinearAxis(new DefaultAxisType("Z", true), 5.0));
+        return ImgView.wrap(Views.moveAxis(concatImgs, concatImgs.numDimensions() - 1, concatAxis));
     }
 
     public RandomAccessibleInterval<T> concatenate(ArrayList<RandomAccessibleInterval<T>> imgs, int concatAxis) {
