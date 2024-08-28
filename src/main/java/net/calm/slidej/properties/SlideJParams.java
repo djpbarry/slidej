@@ -57,6 +57,7 @@ public class SlideJParams extends Properties {
     public static final String OUTPUT_FILE_EXT = ".ome.btf";
     public static final String N_STEPS = "Number of steps";
     public static final String CHANNEL_FOR_STEP = "Channel for";
+    public static final String GRID_ANALYSIS = "Analyse intensities across grid";
     public static final int CELL_IMG_DIM = 100;
     public static final int X_AXIS = 0;
     public static final int Y_AXIS = 1;
